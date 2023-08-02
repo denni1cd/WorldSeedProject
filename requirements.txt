@@ -5,3 +5,5 @@ pre-commit>=3.2.0
 python-dotenv==1.0.0
 tiktoken==0.3.3
 llama-cpp-python>=0.1.42
+langchain>=0.0.154
+
