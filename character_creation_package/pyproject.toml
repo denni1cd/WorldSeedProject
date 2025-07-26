@@ -1,0 +1,35 @@
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "character_creation"
+version = "0.1.0"
+description = "Data-driven character creation system for WorldSeedProject."
+authors = [
+    { name = "WorldSeedProject Team" }
+]
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+dependencies = [
+    "pyyaml>=6.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "black",
+    "ruff",
+    "pre-commit"
+]
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+
+[tool.setuptools.packages.find]
+where = ["character_creation"]
