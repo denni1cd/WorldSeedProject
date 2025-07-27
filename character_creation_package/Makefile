@@ -13,3 +13,5 @@ fmt:
 
 cov:
 	pytest --cov=character_creation --cov-report=term-missing
+run-wizard:
+	python scripts/create_character.py
