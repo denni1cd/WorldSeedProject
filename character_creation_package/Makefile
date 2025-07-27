@@ -10,3 +10,6 @@ test:
 fmt:
 	black .
 	ruff --fix .
+
+cov:
+	pytest --cov=character_creation --cov-report=term-missing
