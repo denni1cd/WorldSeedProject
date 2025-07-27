@@ -1,0 +1,8 @@
+baseline:
+  hp: 20.0
+  mana: 20.0
+
+# growth:
+#   hp: "base_hp + STR * 2 + STA * 1.5"
+#   mana: "base_mana + INT * 2 + WIS * 1.5"
+#   # Example formulas for resource growth. Do not implement logic here.

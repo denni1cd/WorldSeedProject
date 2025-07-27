@@ -1,0 +1,108 @@
+fields:
+  height_cm:
+    type: float
+    range_ref:
+      file: "ranges/height_human.yaml"
+    default: 170.0
+  weight_kg:
+    type: float
+    range_ref:
+      file: "ranges/weight_human.yaml"
+    default: 70.0
+  age:
+    type: float
+    range:
+      min: 15
+      max: 90
+    default: 25.0
+  eye_color:
+    type: enum
+    table_ref:
+      file: "tables/eye_colors.yaml"
+    default: "brown"
+  hair_color:
+    type: enum
+    table_ref:
+      file: "tables/hair_colors.yaml"
+    default: "black"
+  hair_length_cm:
+    type: float
+    range:
+      min: 0
+      max: 120
+    default: 10.0
+  gender:
+    type: enum
+    table_ref:
+      file: "tables/genders.yaml"
+    default: "unspecified"
+  pronouns:
+    type: enum
+    table_ref:
+      file: "tables/pronouns.yaml"
+    default: "they/them"
+  species:
+    type: enum
+    table_ref:
+      file: "tables/species.yaml"
+    default: "human"
+  ancestry:
+    type: enum
+    table_ref:
+      file: "tables/ancestries.yaml"
+    default: null
+  skin_tone:
+    type: enum
+    table_ref:
+      file: "tables/skin_tones.yaml"
+    default: "medium"
+  complexion:
+    type: enum
+    table_ref:
+      file: "tables/complexions.yaml"
+    default: "clear"
+  body_type:
+    type: enum
+    table_ref:
+      file: "tables/body_types.yaml"
+    default: "average"
+  handedness:
+    type: enum
+    table_ref:
+      file: "tables/handedness.yaml"
+    default: "right"
+  voice_profile:
+    type: enum
+    table_ref:
+      file: "tables/voice_profiles.yaml"
+    default: "neutral"
+  P1:
+    type: any
+    default: null
+  P2:
+    type: any
+    default: null
+  P3:
+    type: any
+    default: null
+  P4:
+    type: any
+    default: null
+  P5:
+    type: any
+    default: null
+  P6:
+    type: any
+    default: null
+  P7:
+    type: any
+    default: null
+  P8:
+    type: any
+    default: null
+  P9:
+    type: any
+    default: null
+  P10:
+    type: any
+    default: null

@@ -1,0 +1,65 @@
+STR:
+  name: "Strength"
+  initial: 1.0
+  xp_to_next: 100.0
+  desc: "Physical power and force."
+
+STA:
+  name: "Stamina"
+  initial: 1.0
+  xp_to_next: 100.0
+  desc: "Endurance and ability to sustain effort."
+
+WIS:
+  name: "Wisdom"
+  initial: 1.0
+  xp_to_next: 100.0
+  desc: "Judgment and insight in decision making."
+
+INT:
+  name: "Intelligence"
+  initial: 1.0
+  xp_to_next: 100.0
+  desc: "Ability to learn and reason."
+
+AUT:
+  name: "Autonomy"
+  initial: 1.0
+  xp_to_next: 100.0
+  desc: "Capacity for independent action."
+
+CHA:
+  name: "Charisma"
+  initial: 1.0
+  xp_to_next: 100.0
+  desc: "Influence and social presence."
+
+DEX:
+  name: "Dexterity"
+  initial: 1.0
+  xp_to_next: 100.0
+  desc: "Skill and agility in movement."
+
+P1:
+  name: "Potential 1"
+  initial: 1.0
+  xp_to_next: 100.0
+  desc: "A unique potential stat."
+
+P2:
+  name: "Potential 2"
+  initial: 1.0
+  xp_to_next: 100.0
+  desc: "A unique potential stat."
+
+P3:
+  name: "Potential 3"
+  initial: 1.0
+  xp_to_next: 100.0
+  desc: "A unique potential stat."
+
+P4:
+  name: "Potential 4"
+  initial: 1.0
+  xp_to_next: 100.0
+  desc: "A unique potential stat."

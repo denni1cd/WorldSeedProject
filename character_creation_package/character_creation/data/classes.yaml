@@ -1,0 +1,31 @@
+classes:
+  - id: fighter
+    grants_stats:
+      STR: 1.0
+    grants_abilities:
+      - "Power Strike"
+  - id: mage
+    grants_stats:
+      INT: 1.0
+    grants_abilities:
+      - "Mana Bolt"
+  - id: thief
+    grants_stats:
+      DEX: 1.0
+    grants_abilities:
+      - "Backstab"
+  - id: crafter
+    grants_stats:
+      INT: 1.0
+    grants_abilities:
+      - "Quick Forge"
+  - id: merchant
+    grants_stats:
+      CHA: 1.0
+    grants_abilities:
+      - "Haggle"
+  - id: priest
+    grants_stats:
+      WIS: 1.0
+    grants_abilities:
+      - "Heal Minor Wounds"
