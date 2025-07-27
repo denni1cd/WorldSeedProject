@@ -3,6 +3,12 @@ from typing import Any, Dict, List
 import yaml
 
 
+def load_fields():
+    # Default path to fields.yaml
+    fields_path = Path(__file__).parent.parent / "data" / "appearance" / "fields.yaml"
+    return load_appearance_fields(fields_path)
+
+
 def load_appearance_fields(path: Path) -> Dict[str, Any]:
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
