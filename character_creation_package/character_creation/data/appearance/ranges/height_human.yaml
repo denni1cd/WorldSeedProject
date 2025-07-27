@@ -1,0 +1,6 @@
+range:
+  min: 140.0
+  max: 210.0
+  distribution: normal
+  mean: 170.0
+  sd: 10.0

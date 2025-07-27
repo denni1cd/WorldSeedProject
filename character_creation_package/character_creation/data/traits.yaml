@@ -1,0 +1,19 @@
+traits:
+  brave:
+    name: "Brave"
+    desc: "Faces danger without fear."
+  night_vision:
+    name: "Night Vision"
+    desc: "Can see well in low light conditions."
+  lucky:
+    name: "Lucky"
+    desc: "Fortunate in random events."
+  iron_will:
+    name: "Iron Will"
+    desc: "Resistant to mental stress."
+  silver_tongue:
+    name: "Silver Tongue"
+    desc: "Persuasive and charming in speech."
+  quick_learner:
+    name: "Quick Learner"
+    desc: "Picks up new skills rapidly."

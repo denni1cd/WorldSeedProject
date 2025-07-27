@@ -1,0 +1,55 @@
+slots:
+  armor_head:
+    cat: "armor"
+    display: "Head Armor"
+  armor_top:
+    cat: "armor"
+    display: "Top Armor"
+  armor_bottom:
+    cat: "armor"
+    display: "Bottom Armor"
+  hand_main:
+    cat: "hand"
+    display: "Main Hand"
+  hand_off:
+    cat: "hand"
+    display: "Off Hand"
+  cloth_head:
+    cat: "clothing"
+    display: "Headwear"
+  cloth_torso:
+    cat: "clothing"
+    display: "Torso Garment"
+  cloth_torso_under:
+    cat: "clothing"
+    display: "Undergarment (Torso)"
+  cloth_lower:
+    cat: "clothing"
+    display: "Lower Garment"
+  cloth_lower_under:
+    cat: "clothing"
+    display: "Undergarment (Lower)"
+  cloth_legs:
+    cat: "clothing"
+    display: "Legwear"
+  cloth_wrists:
+    cat: "clothing"
+    display: "Wristwear"
+  cloth_ankles:
+    cat: "clothing"
+    display: "Anklewear"
+  cloth_feet:
+    cat: "clothing"
+    display: "Footwear"
+  cloth_neck:
+    cat: "clothing"
+    display: "Neckwear"
+  accessory_1:
+    cat: "accessory"
+    display: "Accessory Slot 1"
+  accessory_2:
+    cat: "accessory"
+    display: "Accessory Slot 2"
+  accessory_3:
+    cat: "accessory"
+    display: "Accessory Slot 3"
