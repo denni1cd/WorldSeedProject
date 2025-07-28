@@ -4,8 +4,11 @@ from ...services.creation_logic import available_starting_classes, validate_trai
 
 
 def ask_name() -> str:
-    name = input("Enter character name: ").strip()
-    return name
+    while True:
+        name = input("Enter character name: ").strip()
+        if name:
+            return name
+        print("Name cannot be empty. Please enter a valid name.")
 
 
 def choose_starting_class(class_list: List[dict]) -> dict:
@@ -46,13 +49,19 @@ def confirm_save_path(default_path: str) -> str:
 
 def run_wizard(loaders_dict: dict):
     name = ask_name()
-    stat_tmpl = loaders_dict["stats_loader"]
+    stat_tmpl = loaders_dict["stat_tmpl"]
+    slot_tmpl = loaders_dict["slot_tmpl"]
+    appearance_fields = loaders_dict["appearance_fields"]
+    appearance_defaults = loaders_dict.get("appearance_defaults", {})
+    resources = loaders_dict["resources"]
     class_catalog = loaders_dict["classes_loader"]
     trait_catalog = loaders_dict["traits_loader"]
     starting_classes = available_starting_classes(stat_tmpl, class_catalog)
     class_def = choose_starting_class(starting_classes)
     traits = choose_traits(trait_catalog)
-    character = create_new_character(name=name)
+    character = create_new_character(
+        name, stat_tmpl, slot_tmpl, appearance_fields, appearance_defaults, resources
+    )
     character.add_class(class_def)
     character.add_traits(traits)
     return character

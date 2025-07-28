@@ -39,7 +39,8 @@ class Character:
             self.classes.append(class_id)
             for stat, val in class_def.get("grants_stats", {}).items():
                 self.increase_stat(stat, val)
-            self.abilities.update(class_def.get("abilities", []))
+            abilities = class_def.get("grants_abilities", class_def.get("abilities", []))
+            self.abilities.update(abilities)
 
     def remove_class(self, class_id: str) -> None:
         if class_id in self.classes:

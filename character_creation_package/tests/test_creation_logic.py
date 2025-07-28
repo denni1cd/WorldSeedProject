@@ -1,7 +1,9 @@
 import pytest
 from character_creation.services.creation_logic import available_starting_classes, validate_traits
 from character_creation.loaders import classes_loader, traits_loader, stats_loader
+from character_creation.ui.cli.wizard import ask_name
 from pathlib import Path
+import builtins
 
 # Paths relative to test file location
 DATA_ROOT = Path(__file__).parents[2] / "character_creation_package" / "character_creation" / "data"
@@ -41,3 +43,11 @@ def test_validate_traits(trait_catalog):
     assert len(result) == len(set(valid_ids))
     for tid in result:
         assert tid in traits
+
+
+def test_ask_name_reprompts(monkeypatch):
+    # Simulate user entering empty, space, then valid name
+    inputs = iter(["", " ", "ValidName"])
+    monkeypatch.setattr(builtins, "input", lambda _: next(inputs))
+    result = ask_name()
+    assert result == "ValidName"
