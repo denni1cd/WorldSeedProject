@@ -1,3 +1,5 @@
+items-test:
+	pytest -q -k items
 install:
 	pip install -e .[dev]
 

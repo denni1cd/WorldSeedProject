@@ -16,7 +16,8 @@ import json
 
 
 def test_class_abilities_from_yaml():
-    class_catalog = classes_loader.load_class_catalog(Path("character_creation/data/classes.yaml"))
+    DATA_DIR = Path("character_creation_package/character_creation/data")
+    class_catalog = classes_loader.load_class_catalog(DATA_DIR / "classes.yaml")
     # If class_catalog is a dict, get first value; if list, get first item
     # If the YAML root is a dict with 'classes', use that list
     if isinstance(class_catalog, dict) and "classes" in class_catalog:
@@ -28,15 +29,15 @@ def test_class_abilities_from_yaml():
         raise TypeError("class_catalog is not a dict with 'classes' or a list")
     hero = factory.create_new_character(
         name="TestHero",
-        stat_tmpl=stats_loader.load_stat_template(Path("character_creation/data/stats/stats.yaml")),
-        slot_tmpl=slots_loader.load_slot_template(Path("character_creation/data/slots.yaml")),
+        stat_tmpl=stats_loader.load_stat_template(DATA_DIR / "stats" / "stats.yaml"),
+        slot_tmpl=slots_loader.load_slot_template(DATA_DIR / "slots.yaml"),
         appearance_fields=appearance_loader.load_appearance_fields(
-            Path("character_creation/data/appearance/fields.yaml")
+            DATA_DIR / "appearance" / "fields.yaml"
         ),
         appearance_defaults=appearance_loader.load_appearance_defaults(
-            Path("character_creation/data/appearance/defaults.yaml")
+            DATA_DIR / "appearance" / "defaults.yaml"
         ),
-        resources=resources_loader.load_resources(Path("character_creation/data/resources.yaml")),
+        resources=resources_loader.load_resources(DATA_DIR / "resources.yaml"),
     )
     hero.add_class(class_entry)
     expected_abilities = class_entry.get("grants_abilities", [])
@@ -49,26 +50,19 @@ def test_class_abilities_from_yaml():
 
 def test_run_wizard_full_flow(monkeypatch, tmp_path):
     # Prepare loaders_dict
+    DATA_DIR = Path("character_creation_package/character_creation/data")
     loaders_dict = {
-        "stat_tmpl": stats_loader.load_stat_template(
-            Path("character_creation/data/stats/stats.yaml")
-        ),
-        "slot_tmpl": slots_loader.load_slot_template(Path("character_creation/data/slots.yaml")),
+        "stat_tmpl": stats_loader.load_stat_template(DATA_DIR / "stats" / "stats.yaml"),
+        "slot_tmpl": slots_loader.load_slot_template(DATA_DIR / "slots.yaml"),
         "appearance_fields": appearance_loader.load_appearance_fields(
-            Path("character_creation/data/appearance/fields.yaml")
+            DATA_DIR / "appearance" / "fields.yaml"
         ),
         "appearance_defaults": appearance_loader.load_appearance_defaults(
-            Path("character_creation/data/appearance/defaults.yaml")
+            DATA_DIR / "appearance" / "defaults.yaml"
         ),
-        "resources": resources_loader.load_resources(
-            Path("character_creation/data/resources.yaml")
-        ),
-        "classes_loader": classes_loader.load_class_catalog(
-            Path("character_creation/data/classes.yaml")
-        ),
-        "traits_loader": traits_loader.load_trait_catalog(
-            Path("character_creation/data/traits.yaml")
-        ),
+        "resources": resources_loader.load_resources(DATA_DIR / "resources.yaml"),
+        "classes_loader": classes_loader.load_class_catalog(DATA_DIR / "classes.yaml"),
+        "traits_loader": traits_loader.load_trait_catalog(DATA_DIR / "traits.yaml"),
     }
     inputs = iter(["HeroName", "1", "brave, lucky", ""])
     monkeypatch.setattr(builtins, "input", lambda _: next(inputs))
