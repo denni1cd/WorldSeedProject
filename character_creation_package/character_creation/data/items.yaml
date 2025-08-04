@@ -1,0 +1,96 @@
+items:
+  - id: sword_iron
+    name: Iron Sword
+    slot: hand
+    type: weapon
+    tags: [melee, blade]
+    mods:
+      stats:
+        strength: 2.0
+      hp: 0.0
+      mana: 0.0
+      abilities: ["slash"]
+    value: 50
+    weight: 3.5
+
+  - id: bow_oak
+    name: Oak Bow
+    slot: hand
+    type: weapon
+    tags: [ranged, wood]
+    mods:
+      stats:
+        dexterity: 1.5
+      abilities: ["shoot"]
+    value: 40
+    weight: 2.0
+
+  - id: helmet_leather
+    name: Leather Helmet
+    slot: head
+    type: armor
+    tags: [light, leather]
+    mods:
+      stats:
+        defense: 1.0
+      hp: 0.0
+    value: 20
+    weight: 1.0
+
+  - id: armor_chainmail
+    name: Chainmail Armor
+    slot: torso
+    type: armor
+    tags: [medium, metal]
+    mods:
+      stats:
+        defense: 3.0
+      hp: 5.0
+    value: 120
+    weight: 8.0
+
+  - id: boots_cloth
+    name: Cloth Boots
+    slot: feet
+    type: clothing
+    tags: [light, cloth]
+    mods:
+      stats:
+        agility: 0.5
+    value: 10
+    weight: 0.5
+
+  - id: ring_silver
+    name: Silver Ring
+    slot: [left_finger, right_finger]
+    type: accessory
+    tags: [jewelry, silver]
+    mods:
+      mana: 5.0
+      abilities: ["focus"]
+    value: 75
+    weight: 0.1
+
+  - id: amulet_emerald
+    name: Emerald Amulet
+    slot: neck
+    type: accessory
+    tags: [jewelry, magic]
+    mods:
+      stats:
+        intelligence: 1.0
+      mana: 10.0
+      abilities: ["regenerate"]
+    value: 200
+    weight: 0.2
+
+  - id: cloak_wool
+    name: Wool Cloak
+    slot: back
+    type: clothing
+    tags: [warm, cloth]
+    mods:
+      stats:
+        defense: 0.5
+    value: 15
+    weight: 1.2

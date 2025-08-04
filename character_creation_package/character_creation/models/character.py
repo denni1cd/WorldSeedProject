@@ -18,6 +18,11 @@ class Character:
     inventory: List[str] = field(default_factory=list)
     equipment: Dict[str, Optional[str]] = field(default_factory=dict)
     appearance: Dict[str, Any] = field(default_factory=dict)
+    # Equipment bonuses
+    equipped_stat_mods: Dict[str, float] = field(default_factory=dict)
+    equipped_hp_bonus: float = 0.0
+    equipped_mana_bonus: float = 0.0
+    equipped_abilities: Set[str] = field(default_factory=set)
 
     def gain_xp(self, stat_key: str, amount: float, stat_template: Dict[str, dict]) -> None:
         xp_to_next = stat_template[stat_key].get("xp_to_next", 100)
@@ -64,9 +69,10 @@ class Character:
         if item_id in self.inventory:
             self.inventory.remove(item_id)
 
-    def equip(self, item_id: str, slot_id: str) -> None:
+    def equip(self, item_id: str, slot_id: str, items_catalog: Dict[str, Any]) -> None:
         if slot_id in self.equipment:
             self.equipment[slot_id] = item_id
+            self.recalc_equipment_bonuses(items_catalog)
 
     def add_ability(self, ability_id: str) -> None:
         self.abilities.add(ability_id)
@@ -77,11 +83,54 @@ class Character:
     def change_stat(self, stat_key: str, new_value: float) -> None:
         self.stats[stat_key] = new_value
 
-    def unequip(self, slot_id: str) -> None:
+    def unequip(self, slot_id: str, items_catalog: Dict[str, Any]) -> None:
         if slot_id in self.equipment and self.equipment[slot_id] is not None:
             item = self.equipment[slot_id]
             self.inventory.append(item)
             self.equipment[slot_id] = None
+            self.recalc_equipment_bonuses(items_catalog)
+
+    def recalc_equipment_bonuses(self, items_catalog: Dict[str, Any]) -> None:
+        """
+        Clear all equipped_* bonuses, then iterate self.equipment.values(),
+        look up each item in items_catalog, and sum mods (stats/hp/mana/abilities).
+        """
+        self.equipped_stat_mods.clear()
+        self.equipped_hp_bonus = 0.0
+        self.equipped_mana_bonus = 0.0
+        self.equipped_abilities.clear()
+        for item_id in self.equipment.values():
+            if not item_id:
+                continue
+            item = items_catalog.get(item_id)
+            if not item:
+                continue
+            mods = item.get("mods", {})
+            # Stats
+            for stat, val in mods.get("stats", {}).items():
+                self.equipped_stat_mods[stat] = self.equipped_stat_mods.get(stat, 0.0) + float(val)
+            # HP
+            if "hp" in mods:
+                self.equipped_hp_bonus += float(mods["hp"])
+            # Mana
+            if "mana" in mods:
+                self.equipped_mana_bonus += float(mods["mana"])
+            # Abilities
+            for ab in mods.get("abilities", []):
+                self.equipped_abilities.add(ab)
+
+    def get_effective_stat(self, stat_key: str) -> float:
+        # Normalize stat key to match available keys (case-insensitive)
+        stat_key_norm = stat_key.upper()
+        # Try exact, then fallback to lower/upper
+        stat_val = self.stats.get(stat_key_norm)
+        if stat_val is None:
+            # Try lower-case fallback
+            stat_val = self.stats.get(stat_key_norm.lower(), 0.0)
+        mod_val = self.equipped_stat_mods.get(stat_key_norm, 0.0)
+        if mod_val == 0.0:
+            mod_val = self.equipped_stat_mods.get(stat_key_norm.lower(), 0.0)
+        return stat_val + mod_val
 
     def change_hp(self, new_value: float) -> None:
         self.hp = new_value

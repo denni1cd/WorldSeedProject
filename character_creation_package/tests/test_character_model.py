@@ -84,8 +84,10 @@ def test_traits_no_duplicates(blank_hero):
 def test_equipment_cycle(blank_hero, slot_tmpl):
     blank_hero.init_equipment_slots(slot_tmpl)
     blank_hero.add_to_inventory("iron_sword")
-    blank_hero.equip("iron_sword", "hand_main")
+    # Dummy items_catalog for test
+    items_catalog = {"iron_sword": {"id": "iron_sword", "slot": "hand_main", "mods": {}}}
+    blank_hero.equip("iron_sword", "hand_main", items_catalog)
     assert blank_hero.equipment["hand_main"] == "iron_sword"
-    blank_hero.unequip("hand_main")
+    blank_hero.unequip("hand_main", items_catalog)
     assert "iron_sword" in blank_hero.inventory
     assert blank_hero.equipment["hand_main"] is None

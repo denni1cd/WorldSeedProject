@@ -9,6 +9,7 @@ def create_new_character(
     appearance_fields: Dict[str, dict],
     appearance_defaults: Dict[str, Any] | None,
     resources: Dict[str, Any],
+    items_catalog: Dict[str, Any] | None = None,
 ) -> Character:
     stats = {k: v["initial"] for k, v in stat_tmpl.items()}
     stat_xp = {k: 0.0 for k in stat_tmpl}
@@ -17,4 +18,5 @@ def create_new_character(
     hero = Character(name, stats, stat_xp, hp=hp, mana=mana)
     hero.init_equipment_slots(slot_tmpl)
     hero.init_appearance(appearance_fields, appearance_defaults)
+    # items_catalog is ignored for now
     return hero
