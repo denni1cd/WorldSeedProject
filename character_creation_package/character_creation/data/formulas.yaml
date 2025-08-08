@@ -1,0 +1,9 @@
+baseline:
+  hp: "20 + STA * 5 + floor(level / 2)"
+  mana: "20 + INT * 4"
+  xp_to_next: "100 * level"
+
+# Add config section for RNG
+rng:
+  height_distribution: "normal"
+  weight_distribution: "normal"
