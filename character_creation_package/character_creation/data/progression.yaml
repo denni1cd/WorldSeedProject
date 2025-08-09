@@ -1,0 +1,8 @@
+progression:
+  starting_level: 1
+  starting_xp: 0
+  stat_points_per_level: 2
+  # When level changes, recalc HP/Mana from formulas.yaml
+  auto_recalc_derived_on_level: true
+  # When recalculating derived, keep the same % fill for HP/Mana instead of hard reset
+  keep_current_percent_on_recalc: true

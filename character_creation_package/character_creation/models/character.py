@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Set, Optional, Any
 from pathlib import Path
 import json
+from character_creation.services.formula_eval import evaluate
 
 
 @dataclass
@@ -15,6 +16,10 @@ class Character:
     traits: List[str] = field(default_factory=list)
     hp: float = 20.0
     mana: float = 20.0
+    # Progression
+    level: int = 1
+    xp_total: float = 0.0
+    stat_points: int = 0
     inventory: List[str] = field(default_factory=list)
     equipment: Dict[str, Optional[str]] = field(default_factory=dict)
     appearance: Dict[str, Any] = field(default_factory=dict)
@@ -148,6 +153,163 @@ class Character:
 
     def change_mana(self, new_value: float) -> None:
         self.mana = new_value
+
+    def _value_for_context(self, v: Any) -> float:
+        """
+        Extract a numeric value from a stat representation for formula context.
+        Supports objects with .current, dicts with 'current', or numeric values.
+        """
+        if hasattr(v, "current"):
+            try:
+                return float(v.current)
+            except Exception:
+                return 0.0
+        if isinstance(v, dict):
+            # Prefer 'current' then 'base'
+            if "current" in v:
+                try:
+                    return float(v["current"])
+                except Exception:
+                    return 0.0
+            if "base" in v:
+                try:
+                    return float(v["base"])
+                except Exception:
+                    return 0.0
+        if isinstance(v, (int, float)):
+            return float(v)
+        try:
+            return float(v)
+        except Exception:
+            return 0.0
+
+    def refresh_derived(
+        self, formulas: dict, stat_template: dict, keep_percent: bool = True
+    ) -> None:
+        """
+        Recompute HP/Mana bases from formulas['baseline']['hp'] and ['mana'] using formula_eval.evaluate.
+        Context includes: 'level' + all stat keys as floats (self.stats).
+        If keep_percent=True, preserve current% fill when changing base; else set current=base.
+        """
+        # Build evaluation context
+        ctx: Dict[str, Any] = {"level": self.level}
+        for s_name, s_val in self.stats.items():
+            ctx[s_name] = self._value_for_context(s_val)
+
+        # Compute new base values
+        new_hp_base = float(evaluate(formulas["baseline"]["hp"], ctx))
+        new_mana_base = float(evaluate(formulas["baseline"]["mana"], ctx))
+
+        # Update HP structure
+        hp_obj = self.stats.get("HP")
+        if hasattr(hp_obj, "base") and hasattr(hp_obj, "current"):
+            old_base = float(getattr(hp_obj, "base", new_hp_base)) or 1.0
+            percent = float(getattr(hp_obj, "current", old_base)) / old_base if old_base else 1.0
+            setattr(hp_obj, "base", new_hp_base)
+            setattr(hp_obj, "current", percent * new_hp_base if keep_percent else new_hp_base)
+        elif isinstance(hp_obj, dict) and ("base" in hp_obj or "current" in hp_obj):
+            old_base = float(hp_obj.get("base", new_hp_base)) or 1.0
+            percent = float(hp_obj.get("current", old_base)) / old_base if old_base else 1.0
+            hp_obj["base"] = new_hp_base
+            hp_obj["current"] = percent * new_hp_base if keep_percent else new_hp_base
+        else:
+            # Fall back to float attribute
+            self.hp = new_hp_base
+
+        # Update Mana structure
+        mana_obj = self.stats.get("Mana")
+        if hasattr(mana_obj, "base") and hasattr(mana_obj, "current"):
+            old_base = float(getattr(mana_obj, "base", new_mana_base)) or 1.0
+            percent = float(getattr(mana_obj, "current", old_base)) / old_base if old_base else 1.0
+            setattr(mana_obj, "base", new_mana_base)
+            setattr(mana_obj, "current", percent * new_mana_base if keep_percent else new_mana_base)
+        elif isinstance(mana_obj, dict) and ("base" in mana_obj or "current" in mana_obj):
+            old_base = float(mana_obj.get("base", new_mana_base)) or 1.0
+            percent = float(mana_obj.get("current", old_base)) / old_base if old_base else 1.0
+            mana_obj["base"] = new_mana_base
+            mana_obj["current"] = percent * new_mana_base if keep_percent else new_mana_base
+        else:
+            # Fall back to float attribute
+            self.mana = new_mana_base
+
+    def xp_to_next_level(self, formulas: dict) -> float:
+        """
+        Compute xp needed for the NEXT level using formulas['baseline']['xp_to_next'], with context {'level': self.level}.
+        """
+        return float(evaluate(formulas["baseline"]["xp_to_next"], {"level": self.level}))
+
+    def add_general_xp(
+        self, amount: float, formulas: dict, stat_template: dict, progression: dict
+    ) -> int:
+        """
+        Add XP; while xp_total >= xp_to_next(current level), level up:
+          - level += 1
+          - stat_points += progression.get('stat_points_per_level', 2)
+          - if progression.auto_recalc_derived_on_level: call refresh_derived(..., keep_percent=progression.get('keep_current_percent_on_recalc', True))
+        Return number of levels gained.
+        """
+        if amount <= 0:
+            return 0
+
+        self.xp_total += float(amount)
+        levels_gained = 0
+        stat_points_per_level = int(progression.get("stat_points_per_level", 2))
+        auto_recalc = bool(progression.get("auto_recalc_derived_on_level", True))
+        keep_percent = bool(progression.get("keep_current_percent_on_recalc", True))
+
+        # Level-up loop (treat xp_total as per-level progress; subtract thresholds)
+        while True:
+            threshold = self.xp_to_next_level(formulas)
+            if self.xp_total < threshold:
+                break
+            self.xp_total -= threshold
+            self.level += 1
+            self.stat_points += stat_points_per_level
+            levels_gained += 1
+            if auto_recalc:
+                self.refresh_derived(
+                    formulas=formulas, stat_template=stat_template, keep_percent=keep_percent
+                )
+
+        return levels_gained
+
+    def spend_stat_points(self, allocations: Dict[str, float]) -> None:
+        """
+        allocations is a mapping like {'STR': 0.2, 'INT': 0.1}.
+        Verify sum of positive deltas <= available stat_points * 0.1 granularity (or treat 1 point = +0.1).
+        Default: 1 stat point == +0.1 to one stat.
+        Deduct points and apply increases.
+        Raise ValueError on overspend or unknown stats.
+        """
+        if not allocations:
+            return
+
+        # Validate
+        EPS = 1e-9
+        tenths_total = 0
+        for stat_key, delta in allocations.items():
+            if stat_key not in self.stats:
+                raise ValueError(f"Unknown stat: {stat_key}")
+            if delta < -EPS:
+                raise ValueError("Negative allocations are not allowed")
+            if delta < EPS:
+                continue
+            # Enforce 0.1 granularity
+            tenths = round(delta * 10)
+            if abs(delta * 10 - tenths) > 1e-6:
+                raise ValueError("Allocations must be in 0.1 increments")
+            tenths_total += tenths
+
+        if tenths_total > self.stat_points:
+            raise ValueError("Not enough stat points")
+
+        # Apply
+        for stat_key, delta in allocations.items():
+            if delta <= 0:
+                continue
+            self.increase_stat(stat_key, float(delta))
+
+        self.stat_points -= tenths_total
 
     def init_equipment_slots(self, slot_template: Dict[str, dict]) -> None:
         # Support nested slot templates (e.g., {"slots": {...}})
