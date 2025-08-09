@@ -16,6 +16,10 @@ class Character:
     traits: List[str] = field(default_factory=list)
     hp: float = 20.0
     mana: float = 20.0
+    hp_max: float = 0.0
+    mana_max: float = 0.0
+    last_regen_time_hp: float = 0.0
+    last_regen_time_mana: float = 0.0
     # Progression
     level: int = 1
     xp_total: float = 0.0
@@ -154,6 +158,33 @@ class Character:
     def change_mana(self, new_value: float) -> None:
         self.mana = new_value
 
+    def regen_tick(self, resource_config: dict, current_time: float) -> None:
+        """
+        Applies regeneration for HP and Mana if enough time has passed since last tick.
+        Uses resource_config['regen_intervals'], ['regen_amounts'], and ['regen_caps'].
+        """
+        for res in ("hp", "mana"):
+            interval = resource_config.get("regen_intervals", {}).get(res)
+            amount = resource_config.get("regen_amounts", {}).get(res)
+            cap = resource_config.get("regen_caps", {}).get(res)
+            last_time_attr = f"last_regen_time_{res}"
+            current_val = getattr(self, res)
+            max_val = getattr(self, f"{res}_max", current_val)
+
+            if interval is None or amount is None:
+                continue
+
+            last_time = getattr(self, last_time_attr)
+            if current_time - last_time >= interval:
+                ticks = int((current_time - last_time) // interval)
+                current_val += amount * ticks
+                if cap == "max":
+                    current_val = min(current_val, max_val)
+                elif isinstance(cap, (int, float)):
+                    current_val = min(current_val, float(cap))
+                setattr(self, res, current_val)
+                setattr(self, last_time_attr, current_time)
+
     def _value_for_context(self, v: Any) -> float:
         """
         Extract a numeric value from a stat representation for formula context.
@@ -215,6 +246,8 @@ class Character:
         else:
             # Fall back to float attribute
             self.hp = new_hp_base
+        # Update max values
+        self.hp_max = new_hp_base
 
         # Update Mana structure
         mana_obj = self.stats.get("Mana")
@@ -231,6 +264,8 @@ class Character:
         else:
             # Fall back to float attribute
             self.mana = new_mana_base
+        # Update max values
+        self.mana_max = new_mana_base
 
     def xp_to_next_level(self, formulas: dict) -> float:
         """

@@ -26,3 +26,6 @@ run-tui:
 
 xp-demo:
 	python scripts/grant_xp.py
+
+regen-demo:
+	python scripts/sim_regen.py
