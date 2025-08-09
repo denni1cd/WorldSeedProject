@@ -23,3 +23,6 @@ npc-demo:
 
 run-tui:
 	python scripts/run_tui.py
+
+xp-demo:
+	python scripts/grant_xp.py

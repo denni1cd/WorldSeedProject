@@ -94,6 +94,8 @@ def summarize_character(
         "name": getattr(hero, "name", None),
         "class_label": class_label,
         "traits_labels": traits_labels,
+        "level": getattr(hero, "level", None),
+        "stat_points": getattr(hero, "stat_points", None),
         "hp": getattr(hero, "hp", None),
         "mana": getattr(hero, "mana", None),
         "core_stats": getattr(hero, "stats", {}),
