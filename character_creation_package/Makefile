@@ -20,3 +20,6 @@ run-wizard:
 
 npc-demo:
 	python scripts/generate_npcs.py
+
+run-tui:
+	python scripts/run_tui.py
