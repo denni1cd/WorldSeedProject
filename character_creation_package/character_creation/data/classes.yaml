@@ -1,30 +1,36 @@
 classes:
   - id: fighter
+    name: "Fighter"
     grants_stats:
       STR: 1.0
     grants_abilities:
       - "Power Strike"
   - id: mage
+    name: "Mage"
     grants_stats:
       INT: 1.0
     grants_abilities:
       - "Mana Bolt"
   - id: thief
+    name: "Thief"
     grants_stats:
       DEX: 1.0
     grants_abilities:
       - "Backstab"
   - id: crafter
+    name: "Crafter"
     grants_stats:
       INT: 1.0
     grants_abilities:
       - "Quick Forge"
   - id: merchant
+    name: "Merchant"
     grants_stats:
       CHA: 1.0
     grants_abilities:
       - "Haggle"
   - id: priest
+    name: "Priest"
     grants_stats:
       WIS: 1.0
     grants_abilities:

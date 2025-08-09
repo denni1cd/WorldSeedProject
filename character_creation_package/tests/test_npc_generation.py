@@ -3,6 +3,7 @@ from pathlib import Path
 
 from character_creation.loaders import yaml_utils
 from character_creation.services import formula_eval
+from character_creation.services import random_utils
 from character_creation.models import npc_factory
 
 
@@ -124,3 +125,59 @@ def test_generate_npc_populates_fields(
     # Let's use a generous range.
     # assert 18 <= hero.stats["HP"].base <= 200
     # assert hero.stats["HP"].current == hero.stats["HP"].base
+
+
+def test_hp_mana_match_formulas_with_deterministic_rng(
+    monkeypatch,
+    stat_tmpl,
+    slot_tmpl,
+    appearance_fields,
+    appearance_tables_dir,
+    appearance_ranges_dir,
+    class_catalog,
+    trait_catalog,
+    resources,
+    formulas,
+):
+    # Force deterministic RNG behavior
+    monkeypatch.setattr(random_utils, "roll_normal", lambda mean, sd: mean)
+    monkeypatch.setattr(
+        random_utils, "roll_uniform", lambda min_val, max_val: (min_val + max_val) / 2.0
+    )
+
+    hero = npc_factory.generate_npc(
+        name_prefix="NPC",
+        stat_tmpl=stat_tmpl,
+        slot_tmpl=slot_tmpl,
+        appearance_fields=appearance_fields,
+        appearance_tables_dir=appearance_tables_dir,
+        appearance_ranges_dir=appearance_ranges_dir,
+        class_catalog=class_catalog,
+        trait_catalog=trait_catalog,
+        resources=resources,
+        formulas=formulas,
+    )
+
+    def to_number(v):
+        if hasattr(v, "base"):
+            return float(v.base)
+        if isinstance(v, dict) and "base" in v:
+            return float(v["base"])
+        if isinstance(v, (int, float)):
+            return float(v)
+        try:
+            return float(v)
+        except Exception:
+            return 0.0
+
+    ctx = {"level": hero.level}
+    for key in stat_tmpl.keys():
+        if key in hero.stats:
+            ctx[key] = to_number(hero.stats[key])
+
+    # The generator casts evaluated values to int when assigning HP/Mana
+    expected_hp = int(formula_eval.evaluate(formulas["baseline"]["hp"], ctx))
+    expected_mana = int(formula_eval.evaluate(formulas["baseline"]["mana"], ctx))
+
+    assert hero.stats["HP"]["base"] == expected_hp
+    assert hero.stats["Mana"]["base"] == expected_mana
