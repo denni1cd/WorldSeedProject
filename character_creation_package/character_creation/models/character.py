@@ -70,9 +70,15 @@ class Character:
             self.inventory.remove(item_id)
 
     def equip(self, item_id: str, slot_id: str, items_catalog: Dict[str, Any]) -> None:
-        if slot_id in self.equipment:
-            self.equipment[slot_id] = item_id
-            self.recalc_equipment_bonuses(items_catalog)
+        if slot_id not in self.equipment:
+            raise ValueError(f"Invalid slot_id: {slot_id}")
+        # Remove the item from inventory if present (once)
+        if item_id in self.inventory:
+            self.inventory.remove(item_id)
+        # Equip the item
+        self.equipment[slot_id] = item_id
+        # Recalculate bonuses
+        self.recalc_equipment_bonuses(items_catalog)
 
     def add_ability(self, ability_id: str) -> None:
         self.abilities.add(ability_id)
@@ -84,10 +90,15 @@ class Character:
         self.stats[stat_key] = new_value
 
     def unequip(self, slot_id: str, items_catalog: Dict[str, Any]) -> None:
-        if slot_id in self.equipment and self.equipment[slot_id] is not None:
+        if slot_id not in self.equipment:
+            raise ValueError(f"Invalid slot_id: {slot_id}")
+        if self.equipment.get(slot_id) is not None:
             item = self.equipment[slot_id]
-            self.inventory.append(item)
+            # Only append if not already present in inventory
+            if item not in self.inventory:
+                self.inventory.append(item)
             self.equipment[slot_id] = None
+            # Recalculate bonuses
             self.recalc_equipment_bonuses(items_catalog)
 
     def recalc_equipment_bonuses(self, items_catalog: Dict[str, Any]) -> None:

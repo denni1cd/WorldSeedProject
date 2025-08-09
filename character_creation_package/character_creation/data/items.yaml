@@ -1,7 +1,7 @@
 items:
   - id: sword_iron
     name: Iron Sword
-    slot: hand
+    slot: [hand_main, hand_off, hand]
     type: weapon
     tags: [melee, blade]
     mods:
@@ -15,7 +15,7 @@ items:
 
   - id: bow_oak
     name: Oak Bow
-    slot: hand
+    slot: [hand_main, hand]
     type: weapon
     tags: [ranged, wood]
     mods:
@@ -27,7 +27,7 @@ items:
 
   - id: helmet_leather
     name: Leather Helmet
-    slot: head
+    slot: armor_head
     type: armor
     tags: [light, leather]
     mods:
@@ -39,7 +39,7 @@ items:
 
   - id: armor_chainmail
     name: Chainmail Armor
-    slot: torso
+    slot: armor_top
     type: armor
     tags: [medium, metal]
     mods:
@@ -51,7 +51,7 @@ items:
 
   - id: boots_cloth
     name: Cloth Boots
-    slot: feet
+    slot: cloth_feet
     type: clothing
     tags: [light, cloth]
     mods:
@@ -62,7 +62,7 @@ items:
 
   - id: ring_silver
     name: Silver Ring
-    slot: [left_finger, right_finger]
+    slot: accessory
     type: accessory
     tags: [jewelry, silver]
     mods:
@@ -73,7 +73,7 @@ items:
 
   - id: amulet_emerald
     name: Emerald Amulet
-    slot: neck
+    slot: accessory
     type: accessory
     tags: [jewelry, magic]
     mods:
@@ -86,7 +86,7 @@ items:
 
   - id: cloak_wool
     name: Wool Cloak
-    slot: back
+    slot: clothing
     type: clothing
     tags: [warm, cloth]
     mods:
