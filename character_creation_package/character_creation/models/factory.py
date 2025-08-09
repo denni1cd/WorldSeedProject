@@ -17,7 +17,7 @@ def create_new_character(
     stat_xp = {k: 0.0 for k in stat_tmpl}
     hp = resources["baseline"]["hp"]
     mana = resources["baseline"]["mana"]
-    hero = Character(name, stats, stat_xp, hp=hp, mana=mana)
+    hero = Character(name, stats, stat_xp, hp=hp, mana=mana, hp_max=hp, mana_max=mana)
     # Initialize progression fields
     progression = progression or {}
     formulas = formulas or {}

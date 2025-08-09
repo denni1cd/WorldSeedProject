@@ -1,0 +1,10 @@
+resources:
+  regen_intervals:
+    hp: 6.0   # seconds per tick
+    mana: 4.0
+  regen_amounts:
+    hp: 0.5   # points per tick
+    mana: 0.8
+  regen_caps:
+    hp: "max"   # can be "max" or numeric
+    mana: "max"
