@@ -62,10 +62,38 @@ class Character:
         if class_id in self.classes:
             self.classes.remove(class_id)
 
-    def add_traits(self, trait_ids: List[str]) -> None:
-        for trait_id in trait_ids:
+    def add_traits(
+        self, trait_ids: List[str], trait_catalog: Optional[Dict[str, dict]] = None
+    ) -> None:
+        """
+        Add trait IDs to the character, de-duplicated and in order. If a trait_catalog is
+        provided, apply each trait's effects: grants_stats and grants_abilities.
+        Always store trait IDs only in self.traits.
+        """
+        if not trait_ids:
+            return
+        # Deduplicate while preserving order
+        seen: set[str] = set()
+        ordered_ids: List[str] = []
+        for tid in trait_ids:
+            if tid in seen:
+                continue
+            seen.add(tid)
+            ordered_ids.append(tid)
+
+        for trait_id in ordered_ids:
             if trait_id not in self.traits:
                 self.traits.append(trait_id)
+            if trait_catalog:
+                trait_def = trait_catalog.get("traits", {}).get(trait_id, {})
+                for stat, val in trait_def.get("grants_stats", {}).items():
+                    try:
+                        self.increase_stat(stat, float(val))
+                    except Exception:
+                        continue
+                abilities = trait_def.get("grants_abilities", trait_def.get("abilities", []))
+                for ability in abilities or []:
+                    self.abilities.add(ability)
 
     def remove_traits(self, trait_ids: List[str]) -> None:
         for trait_id in trait_ids:
@@ -268,39 +296,58 @@ class Character:
 
         # Update HP structure
         hp_obj = self.stats.get("HP")
+        hp_current: float | None = None
         if hasattr(hp_obj, "base") and hasattr(hp_obj, "current"):
             old_base = float(getattr(hp_obj, "base", new_hp_base)) or 1.0
             percent = float(getattr(hp_obj, "current", old_base)) / old_base if old_base else 1.0
             setattr(hp_obj, "base", new_hp_base)
-            setattr(hp_obj, "current", percent * new_hp_base if keep_percent else new_hp_base)
+            hp_current = percent * new_hp_base if keep_percent else new_hp_base
+            setattr(hp_obj, "current", hp_current)
         elif isinstance(hp_obj, dict) and ("base" in hp_obj or "current" in hp_obj):
             old_base = float(hp_obj.get("base", new_hp_base)) or 1.0
             percent = float(hp_obj.get("current", old_base)) / old_base if old_base else 1.0
             hp_obj["base"] = new_hp_base
-            hp_obj["current"] = percent * new_hp_base if keep_percent else new_hp_base
+            hp_current = percent * new_hp_base if keep_percent else new_hp_base
+            hp_obj["current"] = hp_current
         else:
             # Fall back to float attribute
-            self.hp = new_hp_base
+            hp_current = new_hp_base
+            self.hp = hp_current
         # Update max values
         self.hp_max = new_hp_base
+        if hp_current is None:
+            # If we couldn't derive from structure, set current equal to base
+            hp_current = new_hp_base
+        self.hp = float(hp_current)
 
         # Update Mana structure
         mana_obj = self.stats.get("Mana")
+        mana_current: float | None = None
         if hasattr(mana_obj, "base") and hasattr(mana_obj, "current"):
             old_base = float(getattr(mana_obj, "base", new_mana_base)) or 1.0
             percent = float(getattr(mana_obj, "current", old_base)) / old_base if old_base else 1.0
             setattr(mana_obj, "base", new_mana_base)
-            setattr(mana_obj, "current", percent * new_mana_base if keep_percent else new_mana_base)
+            mana_current = percent * new_mana_base if keep_percent else new_mana_base
+            setattr(mana_obj, "current", mana_current)
         elif isinstance(mana_obj, dict) and ("base" in mana_obj or "current" in mana_obj):
             old_base = float(mana_obj.get("base", new_mana_base)) or 1.0
             percent = float(mana_obj.get("current", old_base)) / old_base if old_base else 1.0
             mana_obj["base"] = new_mana_base
-            mana_obj["current"] = percent * new_mana_base if keep_percent else new_mana_base
+            mana_current = percent * new_mana_base if keep_percent else new_mana_base
+            mana_obj["current"] = mana_current
         else:
             # Fall back to float attribute
-            self.mana = new_mana_base
+            mana_current = new_mana_base
+            self.mana = mana_current
         # Update max values
         self.mana_max = new_mana_base
+        if mana_current is None:
+            mana_current = new_mana_base
+        self.mana = float(mana_current)
+
+        # Ensure stats dict has HP and Mana entries with base/current synced
+        self.stats["HP"] = {"base": self.hp_max, "current": self.hp}
+        self.stats["Mana"] = {"base": self.mana_max, "current": self.mana}
 
     def xp_to_next_level(self, formulas: dict) -> float:
         """
