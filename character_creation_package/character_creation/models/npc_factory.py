@@ -115,7 +115,8 @@ def generate_npc(
         class_catalog
     )  # dict: {id, grants_stats, grants_abilities, ...}
 
-    trait_names = list(trait_catalog.keys())
+    # trait_catalog is a mapping with key 'traits' -> dict of trait_id -> def
+    trait_names = list(trait_catalog.get("traits", {}).keys())
     max_traits = min(len(trait_names), 2)
     num_traits = random.randint(0, max_traits)
     chosen_trait_names = random.sample(trait_names, k=num_traits)
@@ -139,22 +140,9 @@ def generate_npc(
         resources=resources,
     )
 
-    # 5) Apply class: stats and abilities
-    for stat, amt in starter_class.get("grants_stats", {}).items():
-        _add_stat_value(character, stat, amt)
-
-    _add_abilities(getattr(character, "abilities", None), starter_class.get("grants_abilities", []))
-    if hasattr(character, "classes"):
-        _append_collection(character.classes, starter_class)
-
-    # 6) Apply traits
-    for trait_id in chosen_trait_names:
-        trait = trait_catalog[trait_id]
-        for stat, amt in trait.get("grants_stats", {}).items():
-            _add_stat_value(character, stat, amt)
-        _add_abilities(getattr(character, "abilities", None), trait.get("grants_abilities", []))
-        if hasattr(character, "traits"):
-            _append_collection(character.traits, trait)
+    # 5) Apply class and traits via Character API (IDs only, effects inside)
+    character.add_class(starter_class)
+    character.add_traits(chosen_trait_names, trait_catalog)
 
     # 7) Roll random appearance values (override defaults where appropriate)
     for field_name, field_info in appearance_fields.items():

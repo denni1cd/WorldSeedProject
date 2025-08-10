@@ -54,8 +54,8 @@ def run_wizard(loaders_dict: dict):
     appearance_fields = loaders_dict["appearance_fields"]
     appearance_defaults = loaders_dict.get("appearance_defaults", {})
     resources = loaders_dict["resources"]
-    class_catalog = loaders_dict["classes_loader"]
-    trait_catalog = loaders_dict["traits_loader"]
+    class_catalog = loaders_dict["class_catalog"]
+    trait_catalog = loaders_dict["trait_catalog"]
     starting_classes = available_starting_classes(stat_tmpl, class_catalog)
     class_def = choose_starting_class(starting_classes)
     traits = choose_traits(trait_catalog)
@@ -63,5 +63,6 @@ def run_wizard(loaders_dict: dict):
         name, stat_tmpl, slot_tmpl, appearance_fields, appearance_defaults, resources
     )
     character.add_class(class_def)
-    character.add_traits(traits)
+    # Apply trait effects and store IDs only
+    character.add_traits(traits, trait_catalog)
     return character

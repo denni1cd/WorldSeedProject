@@ -42,8 +42,8 @@ def class_catalog(data_path: Path):
 
 @pytest.fixture(scope="module")
 def trait_catalog(data_path: Path):
-    # The YAML file has a root key 'traits', so we need to access it.
-    return yaml_utils.load_yaml(data_path / "traits.yaml").get("traits", {})
+    # Return the full trait catalog dict with key 'traits' for ID lookup
+    return yaml_utils.load_yaml(data_path / "traits.yaml")
 
 
 @pytest.fixture(scope="module")

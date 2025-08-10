@@ -71,8 +71,8 @@ def test_run_wizard_full_flow(monkeypatch, tmp_path):
             DATA_DIR / "appearance" / "defaults.yaml"
         ),
         "resources": resources_loader.load_resources(DATA_DIR / "resources.yaml"),
-        "classes_loader": classes_loader.load_class_catalog(DATA_DIR / "classes.yaml"),
-        "traits_loader": traits_loader.load_trait_catalog(DATA_DIR / "traits.yaml"),
+        "class_catalog": classes_loader.load_class_catalog(DATA_DIR / "classes.yaml"),
+        "trait_catalog": traits_loader.load_trait_catalog(DATA_DIR / "traits.yaml"),
     }
 
     inputs = iter(["HeroName", "1", "brave, lucky", ""])

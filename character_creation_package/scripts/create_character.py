@@ -38,8 +38,8 @@ def main() -> None:
             "appearance_fields": fields,
             "appearance_defaults": defaults,
             "resources": resources,
-            "classes_loader": class_catalog,
-            "traits_loader": trait_catalog,
+            "class_catalog": class_catalog,
+            "trait_catalog": trait_catalog,
         }
     )
 
