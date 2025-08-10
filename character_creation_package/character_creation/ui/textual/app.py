@@ -19,6 +19,7 @@ from ...loaders import (
     appearance_loader,
     resources_loader,
 )
+from ...loaders import difficulty_loader
 from . import state
 from ...services.appearance_logic import get_enum_values, get_numeric_bounds
 from ...loaders.yaml_utils import load_yaml
@@ -28,6 +29,7 @@ from ...loaders.content_packs_loader import (
     merge_catalogs,
 )
 from ...services.live_reload import CatalogReloader
+from ...services.balance import current_profile
 
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
@@ -280,6 +282,19 @@ class SummaryScreen(Screen):
             self.app.race_catalog,
         )
 
+        # Apply balance to derived stats for preview if available
+        try:
+            if self.app.balance_profile:
+                preview.difficulty = str(self.app.balance_cfg.get("current", "normal"))
+                preview.refresh_derived(
+                    formulas=self.app.formulas,
+                    stat_template=self.app.stat_tmpl,
+                    keep_percent=False,
+                    balance=self.app.balance_profile,
+                )
+        except Exception:
+            pass
+
         summary = state.summarize_character(
             preview,
             self.app.starter_classes,
@@ -298,12 +313,17 @@ class SummaryScreen(Screen):
         peek_lines = [f"{k}: {v}" for k, v in peek.items()]
         peek_text = "\n".join(peek_lines)
 
+        difficulty_label = (
+            str(self.app.balance_cfg.get("current", "")) if self.app.balance_cfg else ""
+        )
+
         content = Vertical(
             Static("Step 6: Summary & Save"),
             Static(f"Name: {summary.get('name', '')}"),
             Static(f"Race: {summary.get('race_label', '')}"),
             Static(f"Class: {summary.get('class_label', '')}"),
             Static(f"Traits: {', '.join(summary.get('traits_labels', []))}"),
+            Static(f"Difficulty: {difficulty_label}") if difficulty_label else Static(""),
             Static(f"HP: {summary.get('hp')}  Mana: {summary.get('mana')}"),
             Static("Stats:"),
             Static(stats_text),
@@ -342,6 +362,18 @@ class SummaryScreen(Screen):
                     )
                 except Exception:
                     pass
+                # Apply balance to derived stats before saving if available
+                try:
+                    if self.app.balance_profile:
+                        hero.difficulty = str(self.app.balance_cfg.get("current", "normal"))
+                        hero.refresh_derived(
+                            formulas=self.app.formulas,
+                            stat_template=self.app.stat_tmpl,
+                            keep_percent=False,
+                            balance=self.app.balance_profile,
+                        )
+                except Exception:
+                    pass
                 hero.to_json(Path(path))
                 self.query_one("#save_msg", Static).update(f"Saved to {path}")
             except Exception as exc:
@@ -363,6 +395,10 @@ class CreationApp(App):
         self.class_catalog: Dict[str, Any] = {}
         self.trait_catalog: Dict[str, Any] = {}
         self.race_catalog: Dict[str, Any] = {}
+        # Balance & formulas
+        self.balance_cfg: Dict[str, Any] = {}
+        self.balance_profile: Dict[str, float] | None = None
+        self.formulas: Dict[str, Any] = {}
         # Derived
         self.starter_classes: List[Dict[str, Any]] = []
         # User selections
@@ -382,6 +418,8 @@ class CreationApp(App):
         defaults_path = DATA_DIR / "appearance" / "defaults.yaml"
         resources_path = DATA_DIR / "resources.yaml"
         limits_path = DATA_DIR / "creation_limits.yaml"
+        formulas_path = DATA_DIR / "formulas.yaml"
+        difficulty_path = DATA_DIR / "difficulty.yaml"
 
         self.stat_tmpl = stats_loader.load_stat_template(stats_path)
         self.class_catalog = classes_loader.load_class_catalog(classes_path)
@@ -391,6 +429,19 @@ class CreationApp(App):
         self.appearance_fields = appearance_loader.load_appearance_fields(fields_path)
         self.appearance_defaults = appearance_loader.load_appearance_defaults(defaults_path)
         self.resources = resources_loader.load_resources(resources_path)
+        # Formulas
+        try:
+            with open(formulas_path, "r", encoding="utf-8") as f:
+                self.formulas = yaml.safe_load(f) or {}
+        except Exception:
+            self.formulas = {}
+        # Difficulty profile
+        try:
+            self.balance_cfg = difficulty_loader.load_difficulty(difficulty_path)
+            self.balance_profile = current_profile(self.balance_cfg)
+        except Exception:
+            self.balance_cfg = {"current": "normal", "difficulties": {}}
+            self.balance_profile = None
         # Load creation limits (optional)
         try:
             if limits_path.exists():

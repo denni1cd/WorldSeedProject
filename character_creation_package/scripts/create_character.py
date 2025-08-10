@@ -39,6 +39,14 @@ def main() -> None:
     fields = appearance_loader.load_appearance_fields(fields_path)
     defaults = appearance_loader.load_appearance_defaults(defaults_path)
     resources = resources_loader.load_resources(resources_path)
+    # Formulas
+    formulas_path = root / "character_creation" / "data" / "formulas.yaml"
+    try:
+        import yaml  # noqa: PLC0415
+
+        formulas = yaml.safe_load(open(formulas_path, "r", encoding="utf-8"))
+    except Exception:
+        formulas = {}
     # Difficulty config
     difficulty_path = root / "character_creation" / "data" / "difficulty.yaml"
     balance_cfg = difficulty_loader.load_difficulty(difficulty_path)
@@ -95,7 +103,7 @@ def main() -> None:
         hero.difficulty = str(balance_cfg.get("current", "normal"))
         # Recompute derived with balance scaling applied
         hero.refresh_derived(
-            formulas={}, stat_template=stat_tmpl, keep_percent=False, balance=balance_prof
+            formulas=formulas, stat_template=stat_tmpl, keep_percent=False, balance=balance_prof
         )
     except Exception:
         pass
