@@ -9,6 +9,12 @@ def load_fields():
     return load_appearance_fields(fields_path)
 
 
+def load_defaults() -> Dict[str, Any]:
+    """Backward-compatible alias to load defaults from default path."""
+    defaults_path = Path(__file__).parent.parent / "data" / "appearance" / "defaults.yaml"
+    return load_appearance_defaults(defaults_path)
+
+
 def load_appearance_fields(path: Path) -> Dict[str, Any]:
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)

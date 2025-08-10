@@ -18,6 +18,7 @@ from ...loaders import (
     resources_loader,
 )
 from . import state
+from ...services.appearance_logic import get_enum_values, get_numeric_bounds
 
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
@@ -170,6 +171,80 @@ class TraitScreen(Screen):
                 self.query_one("#trait_error", Static).update("Please select at most 2 traits.")
                 return
             self.app.sel.trait_ids = checked_ids
+            self.app.push_screen("appearance")
+
+
+class AppearanceScreen(Screen):
+    BINDINGS = [("escape", "app.quit", "Quit")]
+
+    def compose(self) -> ComposeResult:
+        # Build dynamic inputs based on appearance_fields
+        fields = self.app.appearance_fields.get("fields", self.app.appearance_fields)
+        rows: List[Any] = []
+        base_dir = DATA_DIR / "appearance"
+
+        for fid, meta in fields.items():
+            ftype = meta.get("type", "any")
+            label = fid
+            if ftype == "enum":
+                values = get_enum_values(fid, self.app.appearance_fields, base_dir)
+                list_items = [ListItem(Static(v)) for v in values]
+                rows.append(Static(label))
+                rows.append(ListView(*list_items, id=f"enum_{fid}"))
+            elif ftype in {"float", "number", "int"}:
+                bounds = get_numeric_bounds(fid, self.app.appearance_fields, base_dir)
+                hint = ""
+                if bounds:
+                    hint = f" (min {bounds[0]}, max {bounds[1]})"
+                rows.append(Static(label + hint))
+                rows.append(Input(placeholder=str(meta.get("default", "")), id=f"num_{fid}"))
+            else:
+                # Opaque/any: show a readonly default
+                rows.append(Static(f"{label}: {meta.get('default')}", id=f"any_{fid}"))
+
+        yield Vertical(
+            Static("Step 5: Appearance"),
+            Vertical(*rows, id="appearance_rows"),
+            Static(id="appearance_error"),
+            Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+        )
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "back":
+            self.app.pop_screen()
+            return
+        if event.button.id == "next":
+            # Collect selections
+            fields = self.app.appearance_fields.get("fields", self.app.appearance_fields)
+            base_dir = DATA_DIR / "appearance"
+            selection: Dict[str, Any] = {}
+            for fid, meta in fields.items():
+                ftype = meta.get("type", "any")
+                if ftype == "enum":
+                    lst = self.query_one(f"#enum_{fid}", ListView)
+                    idx = lst.index
+                    values = get_enum_values(fid, self.app.appearance_fields, base_dir)
+                    if idx is not None and 0 <= idx < len(values):
+                        val = values[idx]
+                        selection[fid] = None if val == "null" else val
+                elif ftype in {"float", "number", "int"}:
+                    inp = self.query_one(f"#num_{fid}", Input)
+                    raw = (inp.value or "").strip()
+                    if raw:
+                        bounds = get_numeric_bounds(fid, self.app.appearance_fields, base_dir)
+                        try:
+                            num = float(raw)
+                            if bounds:
+                                lo, hi = bounds
+                                if num < lo:
+                                    num = lo
+                                if num > hi:
+                                    num = hi
+                            selection[fid] = num
+                        except Exception:
+                            pass
+            # Store on app for summary/save
+            self.app.appearance_selection = selection
             self.app.push_screen("summary")
 
 
@@ -203,8 +278,13 @@ class SummaryScreen(Screen):
         stats_lines = [f"{k}: {v}" for k, v in core_stats_items]
         stats_text = "\n".join(stats_lines)
 
+        # Appearance peek lines
+        peek = summary.get("appearance_peek", {}) or {}
+        peek_lines = [f"{k}: {v}" for k, v in peek.items()]
+        peek_text = "\n".join(peek_lines)
+
         content = Vertical(
-            Static("Step 5: Summary & Save"),
+            Static("Step 6: Summary & Save"),
             Static(f"Name: {summary.get('name', '')}"),
             Static(f"Race: {summary.get('race_label', '')}"),
             Static(f"Class: {summary.get('class_label', '')}"),
@@ -212,6 +292,8 @@ class SummaryScreen(Screen):
             Static(f"HP: {summary.get('hp')}  Mana: {summary.get('mana')}"),
             Static("Stats:"),
             Static(stats_text),
+            Static("Appearance:"),
+            Static(peek_text),
             Static("Save Path (default hero.json):"),
             Input(value="hero.json", id="save_path"),
             Static(id="save_msg"),
@@ -238,6 +320,13 @@ class SummaryScreen(Screen):
                     self.app.trait_catalog,
                     self.app.race_catalog,
                 )
+                # Apply appearance selection before saving
+                try:
+                    state.apply_appearance_selection(
+                        hero, getattr(self.app, "appearance_selection", {})
+                    )
+                except Exception:
+                    pass
                 hero.to_json(Path(path))
                 self.query_one("#save_msg", Static).update(f"Saved to {path}")
             except Exception as exc:
@@ -263,6 +352,7 @@ class CreationApp(App):
         self.starter_classes: List[Dict[str, Any]] = []
         # User selections
         self.sel = state.CreationSelections(name="", class_index=0, trait_ids=[])
+        self.appearance_selection: Dict[str, Any] = {}
 
     def on_mount(self) -> None:
         # Load all YAML at startup
@@ -291,6 +381,7 @@ class CreationApp(App):
         self.install_screen(RaceScreen(), name="race")
         self.install_screen(ClassScreen(), name="class")
         self.install_screen(TraitScreen(), name="traits")
+        self.install_screen(AppearanceScreen(), name="appearance")
         self.install_screen(SummaryScreen(), name="summary")
         self.push_screen("name")
 

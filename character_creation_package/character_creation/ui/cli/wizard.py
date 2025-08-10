@@ -1,6 +1,14 @@
-from typing import Dict, List
+from typing import Any, Dict, List
+from pathlib import Path
 from ...models.factory import create_new_character
 from ...services.creation_logic import available_starting_classes, validate_traits
+from ...services import random_utils
+from ...services.appearance_logic import (
+    get_enum_values,
+    get_numeric_bounds,
+    coerce_numeric,
+    default_for_field,
+)
 
 
 def ask_name() -> str:
@@ -40,6 +48,106 @@ def choose_traits(trait_catalog: Dict[str, dict], max_count: int = 2) -> List[st
         if valid:
             return valid
         print("No valid traits selected. Try again.")
+
+
+def _resolve_appearance_dir() -> Path:
+    # character_creation/ui/cli/wizard.py -> .../character_creation/data/appearance
+    return Path(__file__).parents[3] / "character_creation" / "data" / "appearance"
+
+
+def _safe_input(prompt: str) -> str:
+    try:
+        return input(prompt)
+    except Exception:
+        # Fallback to default command when inputs are exhausted (e.g., tests)
+        return "d"
+
+
+def choose_appearance(
+    appearance_fields: Dict[str, dict],
+    defaults: Dict[str, Any],
+    data_dir: str | Path,
+) -> Dict[str, Any]:
+    """
+    For each field in appearance_fields:
+      - If enum: print choices (1..N) from tables; allow entering number or value; allow 'd' for default, 'r' for random.
+      - If float: show min/max; prompt for number; allow 'd' (default) and 'r' (random within range).
+    Return dict {field_id: chosen_value}.
+    Implement simple re-prompt on invalid inputs.
+    """
+
+    base_dir = Path(data_dir)
+    spec = appearance_fields.get("fields", appearance_fields)
+    selections: Dict[str, Any] = {}
+
+    for field_id, meta in spec.items():
+        ftype = meta.get("type", "any")
+        default_val = default_for_field(field_id, appearance_fields, defaults)
+
+        # Skip opaque types (any) — keep default
+        if ftype not in {"enum", "float", "number", "int"}:
+            if field_id not in selections:
+                selections[field_id] = default_val
+            continue
+
+        while True:
+            if ftype == "enum":
+                values = get_enum_values(field_id, appearance_fields, base_dir)
+                if not values:
+                    print(f"[warn] No table for enum field '{field_id}', using default")
+                    selections[field_id] = default_val
+                    break
+                print(f"Choose {field_id}:")
+                for idx, val in enumerate(values, 1):
+                    print(f"  {idx}. {val}")
+                prompt = f"Enter number (1-{len(values)}), value, 'd' default, or 'r' random: "
+                raw = _safe_input(prompt).strip()
+                if raw.lower() == "d":
+                    selections[field_id] = default_val
+                    break
+                if raw.lower() == "r":
+                    picked = random_utils.choice(values)
+                    # Convert 'null' sentinel to None
+                    selections[field_id] = None if picked == "null" else picked
+                    break
+                if raw.isdigit():
+                    idx = int(raw)
+                    if 1 <= idx <= len(values):
+                        val = values[idx - 1]
+                        selections[field_id] = None if val == "null" else val
+                        break
+                # Accept direct value if valid
+                if raw in values:
+                    selections[field_id] = None if raw == "null" else raw
+                    break
+                print("Invalid input. Try again.")
+                continue
+
+            # Numeric
+            bounds = get_numeric_bounds(field_id, appearance_fields, base_dir)
+            if not bounds:
+                print(f"[warn] No bounds for numeric field '{field_id}', using default")
+                selections[field_id] = default_val
+                break
+            min_v, max_v = bounds
+            print(f"Set {field_id} (min {min_v}, max {max_v}) — 'd' default, 'r' random:")
+            raw = _safe_input("Enter number or command: ").strip().lower()
+            if raw == "d":
+                selections[field_id] = coerce_numeric(default_val, min_v, max_v)
+                break
+            if raw == "r":
+                # Prefer uniform within [min,max]
+                selections[field_id] = float(random_utils.roll_uniform(min_v, max_v))
+                break
+            try:
+                val = float(raw)
+                selections[field_id] = coerce_numeric(val, min_v, max_v)
+                break
+            except Exception:
+                print("Invalid number. Try again.")
+                continue
+
+    return selections
 
 
 def confirm_save_path(default_path: str) -> str:
@@ -82,6 +190,12 @@ def run_wizard(loaders_dict: dict):
     race_def = choose_race(race_catalog)
     class_def = choose_starting_class(starting_classes)
     traits = choose_traits(trait_catalog)
+    # Appearance step
+    try:
+        app_dir = _resolve_appearance_dir()
+    except Exception:
+        app_dir = Path(".")
+    appearance_selection = choose_appearance(appearance_fields, appearance_defaults, app_dir)
     character = create_new_character(
         name, stat_tmpl, slot_tmpl, appearance_fields, appearance_defaults, resources
     )
@@ -92,4 +206,9 @@ def run_wizard(loaders_dict: dict):
     character.add_class(class_def)
     # Apply trait effects and store IDs only
     character.add_traits(traits, trait_catalog)
+    # Apply appearance selections
+    try:
+        character.appearance.update(appearance_selection)
+    except Exception:
+        pass
     return character

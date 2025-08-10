@@ -118,6 +118,21 @@ def summarize_character(
                 race_label = r.get("name") or r.get("id")
                 break
 
+    # Appearance peek: include common keys if present
+    peek_keys = [
+        "eye_color",
+        "hair_color",
+        "height_cm",
+        "weight_kg",
+    ]
+    appearance_peek = {}
+    try:
+        for k in peek_keys:
+            if k in getattr(hero, "appearance", {}):
+                appearance_peek[k] = hero.appearance.get(k)
+    except Exception:
+        appearance_peek = {}
+
     return {
         "name": getattr(hero, "name", None),
         "race_label": race_label,
@@ -128,4 +143,15 @@ def summarize_character(
         "hp": getattr(hero, "hp", None),
         "mana": getattr(hero, "mana", None),
         "core_stats": getattr(hero, "stats", {}),
+        "appearance_peek": appearance_peek,
     }
+
+
+def apply_appearance_selection(hero, selection: Dict[str, Any]) -> None:
+    """hero.appearance.update(selection)"""
+    try:
+        if not isinstance(selection, dict):
+            return
+        hero.appearance.update(selection)
+    except Exception:
+        return
