@@ -82,6 +82,41 @@ def _load_creation_limits() -> dict:
     return {"traits_max": int(lm.get("traits_max", 2))}
 
 
+def choose_difficulty(balance_cfg: Dict[str, Any]) -> str:
+    """Prompt the user to pick a difficulty from balance_cfg['difficulties'].
+    Returns the chosen key; updates balance_cfg['current'].
+    """
+    try:
+        difficulties = list((balance_cfg or {}).get("difficulties", {}).keys())
+    except Exception:
+        difficulties = []
+    if not difficulties:
+        return str((balance_cfg or {}).get("current", "normal"))
+    current = str((balance_cfg or {}).get("current", difficulties[0]))
+    print("Choose difficulty:")
+    for idx, name in enumerate(difficulties, 1):
+        marker = " (current)" if name == current else ""
+        print(f"{idx}. {name}{marker}")
+    raw = _safe_input(
+        f"Enter number (1-{len(difficulties)}) or press Enter for '{current}': "
+    ).strip()
+    chosen = current
+    if raw.isdigit():
+        idx = int(raw)
+        if 1 <= idx <= len(difficulties):
+            chosen = difficulties[idx - 1]
+    elif raw:
+        # accept exact name match
+        if raw in difficulties:
+            chosen = raw
+    try:
+        if isinstance(balance_cfg, dict):
+            balance_cfg["current"] = chosen
+    except Exception:
+        pass
+    return chosen
+
+
 def choose_appearance(
     appearance_fields: Dict[str, dict],
     defaults: Dict[str, Any],
@@ -215,6 +250,14 @@ def run_wizard(loaders_dict: dict):
     limits = _load_creation_limits()
     traits_max = int(limits.get("traits_max", 2))
 
+    # Optional difficulty selection
+    difficulty_label = None
+    if "balance_cfg" in loaders_dict:
+        try:
+            difficulty_label = choose_difficulty(loaders_dict["balance_cfg"])  # updates in place
+        except Exception:
+            difficulty_label = None
+
     race_def = choose_race(race_catalog)
     class_def = choose_starting_class(starting_classes)
     traits = choose_traits(trait_catalog, max_count=traits_max)
@@ -285,8 +328,16 @@ def run_wizard(loaders_dict: dict):
     print(f"Race: {race_label}")
     print(f"Class: {class_label}")
     print(f"Traits: {trait_csv}")
+    if difficulty_label:
+        print(f"Difficulty: {difficulty_label}")
     print(f"HP/Mana: {hp_line} | {mana_line}")
     print(f"Stats: {stats_line}")
     print(f"Appearance: {appearance_line}")
+
+    # Attach chosen difficulty label if any
+    try:
+        character.difficulty = difficulty_label
+    except Exception:
+        pass
 
     return character

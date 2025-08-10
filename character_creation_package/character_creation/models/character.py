@@ -35,6 +35,8 @@ class Character:
     equipped_mana_bonus: float = 0.0
     equipped_abilities: Set[str] = field(default_factory=set)
     active_effects: list[dict] = field(default_factory=list)
+    # Optional difficulty label (traceability)
+    difficulty: str | None = None
 
     def gain_xp(self, stat_key: str, amount: float, stat_template: Dict[str, dict]) -> None:
         xp_to_next = stat_template[stat_key].get("xp_to_next", 100)
@@ -189,7 +191,9 @@ class Character:
     def change_mana(self, new_value: float) -> None:
         self.mana = new_value
 
-    def regen_tick(self, resource_config: dict, current_time: float) -> None:
+    def regen_tick(
+        self, resource_config: dict, current_time: float, balance: dict | None = None
+    ) -> None:
         """
         Applies regeneration for HP and Mana if enough time has passed since last tick.
         Uses resource_config['regen_intervals'], ['regen_amounts'], and ['regen_caps'].
@@ -207,8 +211,18 @@ class Character:
 
             last_time = getattr(self, last_time_attr)
             if current_time - last_time >= interval:
-                ticks = int((current_time - last_time) // interval)
-                current_val += amount * ticks
+                # Support zero or negative intervals as an immediate single tick
+                if isinstance(interval, (int, float)) and interval <= 0:
+                    ticks = 1
+                else:
+                    ticks = int((current_time - last_time) // interval)
+                amt = float(amount)
+                if balance:
+                    try:
+                        amt *= float(balance.get("regen_amount_scale", 1.0))
+                    except Exception:
+                        pass
+                current_val += amt * ticks
                 if cap == "max":
                     current_val = min(current_val, max_val)
                 elif isinstance(cap, (int, float)):
@@ -227,7 +241,7 @@ class Character:
             }
         )
 
-    def update_status_effects(self, current_time: float) -> None:
+    def update_status_effects(self, current_time: float, balance: dict | None = None) -> None:
         """Updates active effects, applies periodic damage or buffs, and removes expired ones."""
         remaining_effects = []
         for eff in self.active_effects:
@@ -239,12 +253,24 @@ class Character:
             if not expired:
                 tick_interval = data.get("tick_interval")
                 if tick_interval and current_time - eff["last_tick"] >= tick_interval:
+                    scale = 1.0
+                    if balance:
+                        try:
+                            scale = float(balance.get("status_effect_scale", 1.0))
+                        except Exception:
+                            scale = 1.0
                     if "tick_damage" in data:
-                        self.hp -= data["tick_damage"]
+                        try:
+                            self.hp -= float(data["tick_damage"]) * scale
+                        except Exception:
+                            pass
                     if "modifies" in data:
                         for stat, mod in data["modifies"].items():
                             if isinstance(mod, (int, float)):
-                                setattr(self, stat, getattr(self, stat) + mod)
+                                try:
+                                    setattr(self, stat, getattr(self, stat) + float(mod) * scale)
+                                except Exception:
+                                    pass
                     eff["last_tick"] = current_time
                 remaining_effects.append(eff)
         self.active_effects = remaining_effects
@@ -279,7 +305,11 @@ class Character:
             return 0.0
 
     def refresh_derived(
-        self, formulas: dict, stat_template: dict, keep_percent: bool = True
+        self,
+        formulas: dict,
+        stat_template: dict,
+        keep_percent: bool = True,
+        balance: dict | None = None,
     ) -> None:
         """
         Recompute HP/Mana bases from formulas['baseline']['hp'] and ['mana'] using formula_eval.evaluate.
@@ -294,6 +324,16 @@ class Character:
         # Compute new base values
         new_hp_base = float(evaluate(formulas["baseline"]["hp"], ctx))
         new_mana_base = float(evaluate(formulas["baseline"]["mana"], ctx))
+        # Apply difficulty scaling if provided
+        if balance:
+            try:
+                new_hp_base *= float(balance.get("hp_scale", 1.0))
+            except Exception:
+                pass
+            try:
+                new_mana_base *= float(balance.get("mana_scale", 1.0))
+            except Exception:
+                pass
 
         # Update HP structure
         hp_obj = self.stats.get("HP")
@@ -350,14 +390,25 @@ class Character:
         self.stats["HP"] = {"base": self.hp_max, "current": self.hp}
         self.stats["Mana"] = {"base": self.mana_max, "current": self.mana}
 
-    def xp_to_next_level(self, formulas: dict) -> float:
+    def xp_to_next_level(self, formulas: dict, balance: dict | None = None) -> float:
         """
         Compute xp needed for the NEXT level using formulas['baseline']['xp_to_next'], with context {'level': self.level}.
         """
-        return float(evaluate(formulas["baseline"]["xp_to_next"], {"level": self.level}))
+        base_cost = float(evaluate(formulas["baseline"]["xp_to_next"], {"level": self.level}))
+        if balance:
+            try:
+                base_cost *= float(balance.get("xp_cost_scale", 1.0))
+            except Exception:
+                pass
+        return base_cost
 
     def add_general_xp(
-        self, amount: float, formulas: dict, stat_template: dict, progression: dict
+        self,
+        amount: float,
+        formulas: dict,
+        stat_template: dict,
+        progression: dict,
+        balance: dict | None = None,
     ) -> int:
         """
         Add XP; while xp_total >= xp_to_next(current level), level up:
@@ -369,7 +420,18 @@ class Character:
         if amount <= 0:
             return 0
 
-        self.xp_total += float(amount)
+        # Apply XP gain scaling
+        try:
+            scaled_amount = float(amount)
+        except Exception:
+            scaled_amount = 0.0
+        if balance:
+            try:
+                scaled_amount *= float(balance.get("xp_gain_scale", 1.0))
+            except Exception:
+                pass
+
+        self.xp_total += scaled_amount
         levels_gained = 0
         stat_points_per_level = int(progression.get("stat_points_per_level", 2))
         auto_recalc = bool(progression.get("auto_recalc_derived_on_level", True))
@@ -377,7 +439,7 @@ class Character:
 
         # Level-up loop (treat xp_total as per-level progress; subtract thresholds)
         while True:
-            threshold = self.xp_to_next_level(formulas)
+            threshold = self.xp_to_next_level(formulas, balance=balance)
             if self.xp_total < threshold:
                 break
             self.xp_total -= threshold
@@ -386,7 +448,10 @@ class Character:
             levels_gained += 1
             if auto_recalc:
                 self.refresh_derived(
-                    formulas=formulas, stat_template=stat_template, keep_percent=keep_percent
+                    formulas=formulas,
+                    stat_template=stat_template,
+                    keep_percent=keep_percent,
+                    balance=balance,
                 )
 
         return levels_gained

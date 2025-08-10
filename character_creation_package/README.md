@@ -84,3 +84,42 @@ The CLI and TUI automatically load and merge enabled packs at startup; newly add
 
 - Run `python scripts/dev_watch.py` to watch `character_creation/data/` and re-validate on changes.
 - Set `dev.live_reload: true` in `character_creation/data/dev_config.yaml` to auto-reload in the TUI.
+
+## Difficulty & Balance
+
+Gameplay balance is data-driven via `character_creation/data/difficulty.yaml`.
+
+Knobs per difficulty profile:
+
+- hp_scale: scales maximum HP
+- mana_scale: scales maximum Mana
+- regen_amount_scale: multiplies per-tick regeneration amounts
+- status_effect_scale: scales magnitudes of status-effect tick damage/buffs
+- xp_gain_scale: scales XP amounts granted to the character
+- xp_cost_scale: scales XP required to reach the next level
+
+Usage:
+
+- Set `balance.current` to one of the names under `balance.difficulties`.
+- CLI/TUI and scripts can pass an optional `balance` profile to character methods to apply scaling without breaking existing flows.
+- Tuning requires no code changes; edit `difficulty.yaml` and re-run.
+
+Example snippet:
+
+```yaml
+balance:
+  current: easy
+  difficulties:
+    easy:
+      hp_scale: 1.15
+      mana_scale: 1.15
+      regen_amount_scale: 1.25
+      status_effect_scale: 0.85
+      xp_gain_scale: 1.10
+      xp_cost_scale: 0.90
+```
+
+Effects:
+
+- Easy: more HP/Mana, faster regen, weaker negative effects, faster leveling.
+- Hard/Nightmare: less HP/Mana, slower regen, stronger effects, slower leveling.

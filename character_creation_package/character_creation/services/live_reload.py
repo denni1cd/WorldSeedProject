@@ -37,6 +37,16 @@ from .validate_data import (
 class CatalogReloader:
     def __init__(self, data_root: Path):
         self.data_root = Path(data_root)
+        # Be robust to different working directories: if provided path doesn't contain
+        # expected files (e.g., stats/stats.yaml), fall back to the package data dir.
+        try:
+            expected = self.data_root / "stats" / "stats.yaml"
+            if not expected.exists():
+                pkg_data = Path(__file__).parents[1] / "data"
+                if (pkg_data / "stats" / "stats.yaml").exists():
+                    self.data_root = pkg_data
+        except Exception:
+            pass
         self.version = 0
         self._last_ok: Dict[str, Any] | None = None
 

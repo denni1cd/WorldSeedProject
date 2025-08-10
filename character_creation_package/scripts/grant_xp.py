@@ -17,6 +17,8 @@ def main():
         progression_loader,
     )
     from character_creation.models.factory import create_new_character
+    from character_creation.loaders import difficulty_loader
+    from character_creation.services.balance import current_profile
 
     # quick and dirty: grant XP to a fresh hero and print level/HP/Mana
     root = package_root / "character_creation" / "data"
@@ -42,7 +44,10 @@ def main():
     )
 
     amount = 250  # tweak
-    gained = hero.add_general_xp(amount, formulas, stat_tmpl, progression)
+    # Difficulty profile
+    balance_cfg = difficulty_loader.load_difficulty(root / "difficulty.yaml")
+    prof = current_profile(balance_cfg)
+    gained = hero.add_general_xp(amount, formulas, stat_tmpl, progression, balance=prof)
     print(
         f"Gained levels: {gained}, level={hero.level}, HP={hero.hp}, Mana={hero.mana}, stat_points={hero.stat_points}"
     )

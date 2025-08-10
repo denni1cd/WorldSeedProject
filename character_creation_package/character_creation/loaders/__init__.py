@@ -7,6 +7,7 @@ from .progression_loader import load_progression
 from .resources_config_loader import load_resource_config
 from .status_effects_loader import load_status_effects
 from .save_loader import save_character, load_character
+from .difficulty_loader import load_difficulty
 
 __all__ = [
     "load_stat_template",
@@ -18,6 +19,7 @@ __all__ = [
     "load_progression",
     "load_resource_config",
     "load_status_effects",
+    "load_difficulty",
     "save_character",
     "load_character",
 ]
