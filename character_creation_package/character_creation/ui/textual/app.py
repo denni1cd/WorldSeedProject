@@ -40,14 +40,16 @@ class NameScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Vertical(
-            Static("Step 1: Enter Character Name"),
-            Input(placeholder="Name", id="name_input"),
-            Static(id="name_error"),
-            Horizontal(
-                Button("Next", id="next"),
-                id="name_buttons",
+            Static("WorldSeed: Character Creation", id="banner"),
+            Static(self.app.render_stepbar("Name"), id="stepbar"),
+            Vertical(
+                Static("Enter Character Name", classes="title"),
+                Input(placeholder="Name", id="name_input"),
+                Static(id="name_error", classes="hint"),
+                Horizontal(Button("Next", id="next"), id="name_buttons"),
+                id="name_panel",
             ),
-            id="name_panel",
+            id="frame",
         )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -80,10 +82,15 @@ class RaceScreen(Screen):
             items.append(ListItem(Static(label)))
 
         yield Vertical(
-            Static("Step 2: Choose Race"),
-            ListView(*items, id="race_list"),
-            Static(id="race_error"),
-            Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+            Static("WorldSeed: Character Creation", id="banner"),
+            Static(self.app.render_stepbar("Race"), id="stepbar"),
+            Vertical(
+                Static("Choose Race", classes="title"),
+                ListView(*items, id="race_list"),
+                Static(id="race_error", classes="hint"),
+                Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+            ),
+            id="frame",
         )
 
     def on_mount(self) -> None:
@@ -182,10 +189,15 @@ class ClassScreen(Screen):
             items.append(ListItem(Static(label)))
 
         yield Vertical(
-            Static("Step 3: Choose Starting Class"),
-            ListView(*items, id="class_list"),
-            Static(id="class_error"),
-            Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+            Static("WorldSeed: Character Creation", id="banner"),
+            Static(self.app.render_stepbar("Class"), id="stepbar"),
+            Vertical(
+                Static("Choose Starting Class", classes="title"),
+                ListView(*items, id="class_list"),
+                Static(id="class_error", classes="hint"),
+                Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+            ),
+            id="frame",
         )
 
     def on_mount(self) -> None:
@@ -225,10 +237,15 @@ class TraitScreen(Screen):
             checkboxes.append(cb)
 
         yield Vertical(
-            Static(f"Step 4: Choose up to {self.app.traits_max} Traits"),
-            Vertical(*checkboxes, id="trait_checks"),
-            Static(id="trait_error"),
-            Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+            Static("WorldSeed: Character Creation", id="banner"),
+            Static(self.app.render_stepbar("Traits"), id="stepbar"),
+            Vertical(
+                Static(f"Choose up to {self.app.traits_max} Traits", classes="title"),
+                Vertical(*checkboxes, id="trait_checks"),
+                Static(id="trait_error", classes="hint"),
+                Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+            ),
+            id="frame",
         )
 
     def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
@@ -294,10 +311,15 @@ class AppearanceScreen(Screen):
                 rows.append(Static(f"{label}: {meta.get('default')}", id=f"any_{fid}"))
 
         yield Vertical(
-            Static("Step 5: Appearance"),
-            Vertical(*rows, id="appearance_rows"),
-            Static(id="appearance_error"),
-            Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+            Static("WorldSeed: Character Creation", id="banner"),
+            Static(self.app.render_stepbar("Appearance"), id="stepbar"),
+            Vertical(
+                Static("Appearance", classes="title"),
+                Vertical(*rows, id="appearance_rows"),
+                Static(id="appearance_error", classes="hint"),
+                Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+            ),
+            id="frame",
         )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -392,21 +414,26 @@ class SummaryScreen(Screen):
         )
 
         content = Vertical(
-            Static("Step 6: Summary & Save"),
-            Static(f"Name: {summary.get('name', '')}"),
-            Static(f"Race: {summary.get('race_label', '')}"),
-            Static(f"Class: {summary.get('class_label', '')}"),
-            Static(f"Traits: {', '.join(summary.get('traits_labels', []))}"),
-            Static(f"Difficulty: {difficulty_label}") if difficulty_label else Static(""),
-            Static(f"HP: {summary.get('hp')}  Mana: {summary.get('mana')}"),
-            Static("Stats:"),
-            Static(stats_text),
-            Static("Appearance:"),
-            Static(peek_text),
-            Static("Save Path (default hero.json):"),
-            Input(value="hero.json", id="save_path"),
-            Static(id="save_msg"),
-            Horizontal(Button("Back", id="back"), Button("Save", id="save")),
+            Static("WorldSeed: Character Creation", id="banner"),
+            Static(self.app.render_stepbar("Summary"), id="stepbar"),
+            Vertical(
+                Static("Summary & Save", classes="title"),
+                Static(f"Name: {summary.get('name', '')}"),
+                Static(f"Race: {summary.get('race_label', '')}"),
+                Static(f"Class: {summary.get('class_label', '')}"),
+                Static(f"Traits: {', '.join(summary.get('traits_labels', []))}"),
+                Static(f"Difficulty: {difficulty_label}") if difficulty_label else Static(""),
+                Static(f"HP: {summary.get('hp')}  Mana: {summary.get('mana')}"),
+                Static("Stats:"),
+                Static(stats_text),
+                Static("Appearance:"),
+                Static(peek_text),
+                Static("Save Path (default hero.json):"),
+                Input(value="hero.json", id="save_path"),
+                Static(id="save_msg"),
+                Horizontal(Button("Back", id="back"), Button("Save", id="save")),
+            ),
+            id="frame",
         )
         yield content
 
@@ -455,7 +482,51 @@ class SummaryScreen(Screen):
 
 
 class CreationApp(App):
-    CSS = ""
+    CSS = """
+    Screen {
+      align: center middle;
+      background: #0f0f17;
+    }
+    #frame {
+      width: 80%;
+      max-width: 100;
+      border: round $accent;
+      padding: 1 2;
+      background: #151525;
+    }
+    #banner {
+      content-align: center middle;
+      color: #e0d8b0;
+      text-style: bold;
+      background: #2a1f1a;
+      height: 3;
+    }
+    #stepbar {
+      height: 1;
+      color: #9ec1a3;
+      content-align: center middle;
+      background: #1b1b2f;
+    }
+    .title {
+      content-align: center middle;
+      height: 2;
+      color: #e3c77a;
+      text-style: bold;
+    }
+    .hint {
+      color: #87a;
+    }
+    ListView {
+      height: 12;
+      border: panel;
+    }
+    Input {
+      border: panel;
+    }
+    Button {
+      margin: 1 1;
+    }
+    """
     TITLE = "Character Creation"
 
     def __init__(self) -> None:
@@ -666,6 +737,25 @@ class CreationApp(App):
             self.call_from_thread(self.set_footer, f"Data reloaded (v{version})")
         except Exception:
             pass
+
+    # --- Helpers ---
+    def render_stepbar(self, current_step: str) -> str:
+        steps = [
+            "Name",
+            "Difficulty",
+            "Race",
+            "Class",
+            "Traits",
+            "Appearance",
+            "Summary",
+        ]
+        parts: list[str] = []
+        for step in steps:
+            if step == current_step:
+                parts.append(f"[bold][#e3c77a]{step}[/]")
+            else:
+                parts.append(step)
+        return "  »  ".join(parts)
 
 
 def run() -> None:
