@@ -32,6 +32,7 @@ class Character:
     equipped_hp_bonus: float = 0.0
     equipped_mana_bonus: float = 0.0
     equipped_abilities: Set[str] = field(default_factory=set)
+    active_effects: list[dict] = field(default_factory=list)
 
     def gain_xp(self, stat_key: str, amount: float, stat_template: Dict[str, dict]) -> None:
         xp_to_next = stat_template[stat_key].get("xp_to_next", 100)
@@ -184,6 +185,39 @@ class Character:
                     current_val = min(current_val, float(cap))
                 setattr(self, res, current_val)
                 setattr(self, last_time_attr, current_time)
+
+    def apply_status_effect(self, effect_name: str, effect_data: dict, start_time: float) -> None:
+        """Adds a status effect to active_effects with start time tracking."""
+        self.active_effects.append(
+            {
+                "name": effect_name,
+                "data": effect_data,
+                "start_time": start_time,
+                "last_tick": start_time,
+            }
+        )
+
+    def update_status_effects(self, current_time: float) -> None:
+        """Updates active effects, applies periodic damage or buffs, and removes expired ones."""
+        remaining_effects = []
+        for eff in self.active_effects:
+            data = eff["data"]
+            start_time = eff["start_time"]
+            duration = data.get("duration", 0)
+            expired = current_time - start_time > duration if duration > 0 else False
+
+            if not expired:
+                tick_interval = data.get("tick_interval")
+                if tick_interval and current_time - eff["last_tick"] >= tick_interval:
+                    if "tick_damage" in data:
+                        self.hp -= data["tick_damage"]
+                    if "modifies" in data:
+                        for stat, mod in data["modifies"].items():
+                            if isinstance(mod, (int, float)):
+                                setattr(self, stat, getattr(self, stat) + mod)
+                    eff["last_tick"] = current_time
+                remaining_effects.append(eff)
+        self.active_effects = remaining_effects
 
     def _value_for_context(self, v: Any) -> float:
         """
