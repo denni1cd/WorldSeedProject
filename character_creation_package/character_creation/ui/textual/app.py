@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Dict, List
+import threading
+import yaml
 
 from textual.app import App, ComposeResult
 from textual.screen import Screen
@@ -25,6 +27,7 @@ from ...loaders.content_packs_loader import (
     load_and_merge_enabled_packs,
     merge_catalogs,
 )
+from ...services.live_reload import CatalogReloader
 
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
@@ -437,6 +440,106 @@ class CreationApp(App):
         self.install_screen(AppearanceScreen(), name="appearance")
         self.install_screen(SummaryScreen(), name="summary")
         self.push_screen("name")
+
+        # Dev live reload
+        try:
+            dev_cfg_path = DATA_DIR / "dev_config.yaml"
+            live_reload_enabled = False
+            debounce_ms = 300
+            if dev_cfg_path.exists():
+                with open(dev_cfg_path, "r", encoding="utf-8") as fh:
+                    dev_cfg = yaml.safe_load(fh) or {}
+                live_reload_enabled = bool(
+                    ((dev_cfg or {}).get("dev") or {}).get("live_reload", False)
+                )
+                debounce_ms = int(((dev_cfg or {}).get("dev") or {}).get("debounce_ms", 300))
+            if live_reload_enabled:
+                self._reloader = CatalogReloader(DATA_DIR)
+
+                def _apply_initial():
+                    try:
+                        cats = self._reloader.reload_once()
+                        self.apply_catalogs(cats)
+                    except Exception as exc:  # noqa: BLE001
+                        print(f"[LiveReload] Initial load failed: {exc}")
+
+                _apply_initial()
+
+                def _watcher():
+                    self._reloader.watch(self._on_catalogs_updated, debounce_ms=debounce_ms)
+
+                t = threading.Thread(target=_watcher, daemon=True)
+                t.start()
+        except Exception:
+            # Dev-only path; ignore failures silently
+            pass
+
+    # --- Live reload hooks ---
+    def apply_catalogs(self, cats: Dict[str, Any]) -> None:
+        # Update in-memory catalogs and derived caches
+        self.stat_tmpl = cats.get("stats", self.stat_tmpl)
+        self.slot_tmpl = cats.get("slots", self.slot_tmpl)
+        self.appearance_fields = cats.get("appearance_fields", self.appearance_fields)
+        self.appearance_defaults = cats.get("appearance_defaults", self.appearance_defaults)
+        self.resources = cats.get("resources", self.resources)
+        self.class_catalog = cats.get("class_catalog", self.class_catalog)
+        self.trait_catalog = cats.get("trait_catalog", self.trait_catalog)
+        self.race_catalog = cats.get("race_catalog", self.race_catalog)
+
+        # Limits
+        try:
+            lm = cats.get("creation_limits", {})
+            lm = lm.get("limits", lm)
+            if isinstance(lm, dict):
+                self.traits_max = int(lm.get("traits_max", self.traits_max))
+        except Exception:
+            pass
+
+        # Derived starters
+        self.starter_classes = state.list_starter_classes(self.class_catalog)
+
+        # Refresh mounted lists if present
+        try:
+            # Race list
+            race_list = self.screen.query_one("#race_list", ListView)
+            race_items: List[ListItem] = []
+            for r in state.list_races(self.race_catalog):
+                lbl = r.get("name") or r.get("id") or "Unknown"
+                race_items.append(ListItem(Static(lbl)))
+            race_list.clear()
+            race_list.extend(race_items)
+        except Exception:
+            pass
+        try:
+            # Class list
+            class_list = self.screen.query_one("#class_list", ListView)
+            class_items: List[ListItem] = []
+            for cls in self.starter_classes:
+                lbl = cls.get("name") or cls.get("id") or "Unknown"
+                class_items.append(ListItem(Static(lbl)))
+            class_list.clear()
+            class_list.extend(class_items)
+        except Exception:
+            pass
+        try:
+            # Trait checks
+            trait_checks = self.screen.query_one("#trait_checks", Vertical)
+            trait_checks.remove_children()
+            for tid, meta in state.list_traits(self.trait_catalog):
+                label = meta.get("name") or tid
+                cb = Checkbox(label, value=(tid in self.sel.trait_ids), id=tid)
+                trait_checks.mount(cb)
+        except Exception:
+            pass
+
+    def _on_catalogs_updated(
+        self, cats: Dict[str, Any], version: int, changes: list
+    ) -> None:  # noqa: ANN001
+        try:
+            self.call_from_thread(self.apply_catalogs, cats)
+            self.call_from_thread(self.set_footer, f"Data reloaded (v{version})")
+        except Exception:
+            pass
 
 
 def run() -> None:

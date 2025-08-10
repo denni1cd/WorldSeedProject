@@ -35,3 +35,6 @@ effects-demo:
 
 save-demo:
 	python -m scripts.demo_save_load
+
+dev-watch:
+	python scripts/dev_watch.py
