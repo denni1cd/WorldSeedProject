@@ -1,0 +1,15 @@
+status_effects:
+  poison:
+    type: debuff
+    duration: 10.0   # seconds
+    tick_interval: 2.0
+    tick_damage: 1.0
+    modifies: { hp: -1.0 }
+  bless:
+    type: buff
+    duration: 15.0
+    modifies: { charm: +2.0 }
+  haste:
+    type: buff
+    duration: 8.0
+    modifies: { dexterity: +3.0 }

@@ -29,3 +29,6 @@ xp-demo:
 
 regen-demo:
 	python scripts/sim_regen.py
+
+effects-demo:
+	python scripts/sim_status_effects.py
