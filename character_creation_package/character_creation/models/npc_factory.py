@@ -8,6 +8,7 @@ from typing import Any, Dict, List
 from character_creation.models.character import Character
 from character_creation.models import factory
 from character_creation.services import formula_eval, random_utils
+from character_creation.services.seed import set_seed
 from character_creation.loaders import yaml_utils
 
 
@@ -92,10 +93,14 @@ def generate_npc(
     trait_catalog: Dict[str, Any],
     resources: Dict[str, Any],
     formulas: Dict[str, Any],
+    seed: int | None = None,
 ) -> Character:
     """
     Generates a complete NPC character with randomized attributes.
     """
+
+    # 0) Optional deterministic seeding
+    set_seed(seed)
 
     # 1) Randomize stats from template
     randomized_stats = {k: v.copy() for k, v in stat_tmpl.items()}
