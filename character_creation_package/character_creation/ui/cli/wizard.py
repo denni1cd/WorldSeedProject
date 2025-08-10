@@ -47,6 +47,27 @@ def confirm_save_path(default_path: str) -> str:
     return path if path else default_path
 
 
+def choose_race(race_catalog: dict) -> dict:
+    """
+    Show numbered list of races (use 'name' if present else id), prompt until valid index,
+    return chosen race dict.
+    """
+    races = list(race_catalog.get("races", []))
+    if not races:
+        return {}
+    while True:
+        print("Choose a race:")
+        for idx, race in enumerate(races, 1):
+            label = race.get("name") or race.get("id") or "Unknown"
+            print(f"{idx}. {label}")
+        choice = input(f"Enter number (1-{len(races)}): ").strip()
+        if choice.isdigit():
+            idx = int(choice)
+            if 1 <= idx <= len(races):
+                return races[idx - 1]
+        print("Invalid choice. Try again.")
+
+
 def run_wizard(loaders_dict: dict):
     name = ask_name()
     stat_tmpl = loaders_dict["stat_tmpl"]
@@ -56,12 +77,18 @@ def run_wizard(loaders_dict: dict):
     resources = loaders_dict["resources"]
     class_catalog = loaders_dict["class_catalog"]
     trait_catalog = loaders_dict["trait_catalog"]
+    race_catalog = loaders_dict.get("race_catalog", {"races": []})
     starting_classes = available_starting_classes(stat_tmpl, class_catalog)
+    race_def = choose_race(race_catalog)
     class_def = choose_starting_class(starting_classes)
     traits = choose_traits(trait_catalog)
     character = create_new_character(
         name, stat_tmpl, slot_tmpl, appearance_fields, appearance_defaults, resources
     )
+    if race_def:
+        rid = race_def.get("id")
+        if rid:
+            character.set_race(rid, race_catalog)
     character.add_class(class_def)
     # Apply trait effects and store IDs only
     character.add_traits(traits, trait_catalog)

@@ -12,6 +12,7 @@ def create_new_character(
     items_catalog: Dict[str, Any] | None = None,
     progression: Dict[str, Any] | None = None,
     formulas: Dict[str, Any] | None = None,
+    race_id: str | None = None,
 ) -> Character:
     stats = {k: v["initial"] for k, v in stat_tmpl.items()}
     stat_xp = {k: 0.0 for k in stat_tmpl}

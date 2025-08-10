@@ -6,6 +6,7 @@ from character_creation.loaders import (
     slots_loader,
     appearance_loader,
     resources_loader,
+    races_loader,
 )
 from character_creation.ui.cli.wizard import run_wizard, confirm_save_path
 
@@ -16,6 +17,7 @@ def main() -> None:
     stats_path = root / "character_creation" / "data" / "stats" / "stats.yaml"
     classes_path = root / "character_creation" / "data" / "classes.yaml"
     traits_path = root / "character_creation" / "data" / "traits.yaml"
+    races_path = root / "character_creation" / "data" / "races.yaml"
     slots_path = root / "character_creation" / "data" / "slots.yaml"
     fields_path = root / "character_creation" / "data" / "appearance" / "fields.yaml"
     defaults_path = root / "character_creation" / "data" / "appearance" / "defaults.yaml"
@@ -25,6 +27,7 @@ def main() -> None:
     stat_tmpl = stats_loader.load_stat_template(stats_path)
     class_catalog = classes_loader.load_class_catalog(classes_path)
     trait_catalog = traits_loader.load_trait_catalog(traits_path)
+    race_catalog = races_loader.load_race_catalog(races_path)
     slot_tmpl = slots_loader.load_slot_template(slots_path)
     fields = appearance_loader.load_appearance_fields(fields_path)
     defaults = appearance_loader.load_appearance_defaults(defaults_path)
@@ -40,6 +43,7 @@ def main() -> None:
             "resources": resources,
             "class_catalog": class_catalog,
             "trait_catalog": trait_catalog,
+            "race_catalog": race_catalog,
         }
     )
 

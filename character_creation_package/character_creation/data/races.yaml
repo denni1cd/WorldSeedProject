@@ -1,0 +1,21 @@
+races:
+  - id: human
+    name: Human
+    grants_stats: { AUT: 0.1, CHA: 0.1 }
+    grants_abilities: []
+  - id: elf
+    name: Elf
+    grants_stats: { DEX: 0.2, INT: 0.1 }
+    grants_abilities: ["keen_senses"]
+  - id: dwarf
+    name: Dwarf
+    grants_stats: { STA: 0.3 }
+    grants_abilities: ["stonecunning"]
+  - id: orc
+    name: Orc
+    grants_stats: { STR: 0.3, CHA: -0.1 }
+    grants_abilities: ["savage_blow"]
+  - id: halfling
+    name: Halfling
+    grants_stats: { DEX: 0.2 }
+    grants_abilities: ["lucky_step"]
