@@ -44,6 +44,33 @@ def main():
 
     print("--- Generating 3 NPCs ---")
 
+    def _base_current(val):
+        if hasattr(val, "base") and hasattr(val, "current"):
+            return getattr(val, "base", 0), getattr(val, "current", 0)
+        if isinstance(val, dict):
+            return val.get("base", 0), val.get("current", 0)
+        try:
+            f = float(val)
+            return f, f
+        except Exception:
+            return 0, 0
+
+    def _current_value(val):
+        if hasattr(val, "current"):
+            try:
+                return float(getattr(val, "current"))
+            except Exception:
+                return 0.0
+        if isinstance(val, dict):
+            try:
+                return float(val.get("current", val.get("base", 0)))
+            except Exception:
+                return 0.0
+        try:
+            return float(val)
+        except Exception:
+            return 0.0
+
     for i in range(1, 4):
         # Generate a single NPC
         npc = npc_factory.generate_npc(
@@ -62,13 +89,17 @@ def main():
         # Print the generated NPC's details
         print(f"\n--- Details for {npc.name} ---")
         print(f"  Level: {npc.level}")
-        print(f"  HP: {npc.stats['HP'].current}/{npc.stats['HP'].base}")
-        print(f"  Mana: {npc.stats['Mana'].current}/{npc.stats['Mana'].base}")
+        hp_base, hp_cur = _base_current(npc.stats.get("HP"))
+        mana_base, mana_cur = _base_current(npc.stats.get("Mana"))
+        print(f"  HP: {hp_cur}/{hp_base}")
+        print(f"  Mana: {mana_cur}/{mana_base}")
         print(f"  Classes: {[ (c.get('name') or c.get('id') or 'Unknown') for c in npc.classes ]}")
         print(f"  Traits: {[ (t.get('name') or t.get('id') or 'Unknown') for t in npc.traits ]}")
         # Printing the full stats dictionary can be verbose, let's show a summary
         stats_summary = {
-            name: f"{s.current:.1f}" for name, s in npc.stats.items() if name not in ["HP", "Mana"]
+            name: f"{_current_value(s):.1f}"
+            for name, s in npc.stats.items()
+            if name not in ["HP", "Mana"]
         }
         print(f"  Stats: {stats_summary}")
         print("-" * 20)

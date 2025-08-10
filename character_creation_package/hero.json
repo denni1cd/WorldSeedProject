@@ -1,0 +1,77 @@
+{
+  "name": "test",
+  "stats": {
+    "STR": 2.0,
+    "STA": 1.0,
+    "WIS": 1.0,
+    "INT": 1.0,
+    "AUT": 1.0,
+    "CHA": 1.0,
+    "DEX": 1.0,
+    "P1": 1.0,
+    "P2": 1.0,
+    "P3": 1.0,
+    "P4": 1.0
+  },
+  "stat_xp": {
+    "STR": 0.0,
+    "STA": 0.0,
+    "WIS": 0.0,
+    "INT": 0.0,
+    "AUT": 0.0,
+    "CHA": 0.0,
+    "DEX": 0.0,
+    "P1": 0.0,
+    "P2": 0.0,
+    "P3": 0.0,
+    "P4": 0.0
+  },
+  "classes": [
+    "fighter"
+  ],
+  "abilities": [
+    "Power Strike"
+  ],
+  "traits": [
+    "brave",
+    "lucky"
+  ],
+  "hp": 20.0,
+  "mana": 20.0,
+  "hp_max": 20.0,
+  "mana_max": 20.0,
+  "last_regen_time_hp": 0.0,
+  "last_regen_time_mana": 0.0,
+  "level": 1,
+  "xp_total": 0.0,
+  "stat_points": 0,
+  "inventory": [],
+  "equipment": {
+    "armor_head": null,
+    "armor_top": null,
+    "armor_bottom": null,
+    "hand_main": null,
+    "hand_off": null,
+    "cloth_head": null,
+    "cloth_torso": null,
+    "cloth_torso_under": null,
+    "cloth_lower": null,
+    "cloth_lower_under": null,
+    "cloth_legs": null,
+    "cloth_wrists": null,
+    "cloth_ankles": null,
+    "cloth_feet": null,
+    "cloth_neck": null,
+    "accessory_1": null,
+    "accessory_2": null,
+    "accessory_3": null
+  },
+  "appearance": {
+    "fields": null
+  },
+  "equipped_stat_mods": {},
+  "equipped_hp_bonus": 0.0,
+  "equipped_mana_bonus": 0.0,
+  "equipped_abilities": [],
+  "active_effects": []
+}
