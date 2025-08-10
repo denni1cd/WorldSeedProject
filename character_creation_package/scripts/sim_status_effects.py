@@ -15,6 +15,8 @@ from character_creation.loaders import (
     status_effects_loader,
 )
 from character_creation.models.factory import create_new_character
+from character_creation.loaders import difficulty_loader
+from character_creation.services.balance import current_profile
 
 
 def main():
@@ -43,7 +45,9 @@ def main():
     hero.apply_status_effect("bless", effects["bless"], time.time())
 
     for i in range(12):
-        hero.update_status_effects(time.time())
+        balance_cfg = difficulty_loader.load_difficulty(root / "difficulty.yaml")
+        prof = current_profile(balance_cfg)
+        hero.update_status_effects(time.time(), balance=prof)
         charm_val = (
             hero.get_effective_stat("CHA")
             if hasattr(hero, "get_effective_stat")

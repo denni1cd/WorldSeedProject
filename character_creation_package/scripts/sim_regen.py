@@ -14,6 +14,8 @@ from character_creation.loaders import (
     resources_config_loader,
 )
 from character_creation.models.factory import create_new_character
+from character_creation.loaders import difficulty_loader
+from character_creation.services.balance import current_profile
 
 
 def main():
@@ -44,7 +46,10 @@ def main():
     print(f"Before regen: HP={hero.hp}, Mana={hero.mana}")
     for i in range(5):
         time.sleep(1)
-        hero.regen_tick(resource_config, time.time())
+        # Difficulty profile
+        balance_cfg = difficulty_loader.load_difficulty(root / "difficulty.yaml")
+        prof = current_profile(balance_cfg)
+        hero.regen_tick(resource_config, time.time(), balance=prof)
         print(f"[t+{i+1}s] HP={hero.hp:.2f}, Mana={hero.mana:.2f}")
 
 

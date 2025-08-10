@@ -1,0 +1,31 @@
+balance:
+  current: normal
+  difficulties:
+    easy:
+      hp_scale: 1.15
+      mana_scale: 1.15
+      regen_amount_scale: 1.25
+      status_effect_scale: 0.85
+      xp_gain_scale: 1.10
+      xp_cost_scale: 0.90
+    normal:
+      hp_scale: 1.00
+      mana_scale: 1.00
+      regen_amount_scale: 1.00
+      status_effect_scale: 1.00
+      xp_gain_scale: 1.00
+      xp_cost_scale: 1.00
+    hard:
+      hp_scale: 0.90
+      mana_scale: 0.90
+      regen_amount_scale: 0.90
+      status_effect_scale: 1.10
+      xp_gain_scale: 0.95
+      xp_cost_scale: 1.10
+    nightmare:
+      hp_scale: 0.80
+      mana_scale: 0.80
+      regen_amount_scale: 0.75
+      status_effect_scale: 1.25
+      xp_gain_scale: 0.90
+      xp_cost_scale: 1.25

@@ -14,6 +14,8 @@ from character_creation.loaders.content_packs_loader import (
     merge_catalogs,
 )
 from character_creation.ui.cli.wizard import run_wizard, confirm_save_path
+from character_creation.loaders import difficulty_loader
+from character_creation.services.balance import current_profile
 
 
 def main() -> None:
@@ -37,6 +39,10 @@ def main() -> None:
     fields = appearance_loader.load_appearance_fields(fields_path)
     defaults = appearance_loader.load_appearance_defaults(defaults_path)
     resources = resources_loader.load_resources(resources_path)
+    # Difficulty config
+    difficulty_path = root / "character_creation" / "data" / "difficulty.yaml"
+    balance_cfg = difficulty_loader.load_difficulty(difficulty_path)
+    balance_prof = current_profile(balance_cfg)
 
     # Load content packs config and merged overlays (tolerate absence)
     packs_cfg_path = root / "character_creation" / "data" / "content_packs.yaml"
@@ -79,8 +85,20 @@ def main() -> None:
             "class_catalog": class_catalog,
             "trait_catalog": trait_catalog,
             "race_catalog": race_catalog,
+            "balance_cfg": balance_cfg,
+            "balance_profile": balance_prof,
         }
     )
+
+    # Set difficulty label and recompute derived with chosen balance
+    try:
+        hero.difficulty = str(balance_cfg.get("current", "normal"))
+        # Recompute derived with balance scaling applied
+        hero.refresh_derived(
+            formulas={}, stat_template=stat_tmpl, keep_percent=False, balance=balance_prof
+        )
+    except Exception:
+        pass
 
     # Ask for save path
     default_path = str(root / "hero.json")
