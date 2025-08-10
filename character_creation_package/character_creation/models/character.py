@@ -415,3 +415,16 @@ class Character:
         if isinstance(data.get("abilities"), list):
             data["abilities"] = set(data["abilities"])
         return cls(**data)
+
+    def save(self, save_path: str | Path) -> None:
+        """Save this character to a YAML file."""
+        from character_creation.loaders import save_loader
+
+        save_loader.save_character(self, save_path)
+
+    @classmethod
+    def load(cls, save_path: str | Path) -> "Character":
+        """Load a character from YAML file."""
+        from character_creation.loaders import save_loader
+
+        return save_loader.load_character(save_path, cls)
