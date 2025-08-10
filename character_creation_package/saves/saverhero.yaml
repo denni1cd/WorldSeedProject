@@ -1,0 +1,64 @@
+abilities: !!set {}
+active_effects: []
+appearance:
+  fields: null
+classes: []
+equipment:
+  accessory_1: null
+  accessory_2: null
+  accessory_3: null
+  armor_bottom: null
+  armor_head: null
+  armor_top: null
+  cloth_ankles: null
+  cloth_feet: null
+  cloth_head: null
+  cloth_legs: null
+  cloth_lower: null
+  cloth_lower_under: null
+  cloth_neck: null
+  cloth_torso: null
+  cloth_torso_under: null
+  cloth_wrists: null
+  hand_main: null
+  hand_off: null
+equipped_abilities: !!set {}
+equipped_hp_bonus: 0.0
+equipped_mana_bonus: 0.0
+equipped_stat_mods: {}
+hp: 25.0
+hp_max: 25.0
+inventory: []
+last_regen_time_hp: 0.0
+last_regen_time_mana: 0.0
+level: 1
+mana: 24.0
+mana_max: 24.0
+name: SaverHero
+stat_points: 0
+stat_xp:
+  AUT: 0.0
+  CHA: 0.0
+  DEX: 0.0
+  INT: 0.0
+  P1: 0.0
+  P2: 0.0
+  P3: 0.0
+  P4: 0.0
+  STA: 0.0
+  STR: 0.0
+  WIS: 0.0
+stats:
+  AUT: 1.0
+  CHA: 1.0
+  DEX: 1.0
+  INT: 1.0
+  P1: 1.0
+  P2: 1.0
+  P3: 1.0
+  P4: 1.0
+  STA: 1.0
+  STR: 1.0
+  WIS: 1.0
+traits: []
+xp_total: 0.0

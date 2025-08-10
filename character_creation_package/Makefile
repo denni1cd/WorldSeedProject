@@ -32,3 +32,6 @@ regen-demo:
 
 effects-demo:
 	python scripts/sim_status_effects.py
+
+save-demo:
+	python -m scripts.demo_save_load
