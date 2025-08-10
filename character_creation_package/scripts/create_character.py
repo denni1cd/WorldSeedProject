@@ -33,13 +33,13 @@ def main() -> None:
     # Run wizard
     hero = run_wizard(
         {
-            "stats_loader": stat_tmpl,
+            "stat_tmpl": stat_tmpl,
+            "slot_tmpl": slot_tmpl,
+            "appearance_fields": fields,
+            "appearance_defaults": defaults,
+            "resources": resources,
             "classes_loader": class_catalog,
             "traits_loader": trait_catalog,
-            "slots_loader": slot_tmpl,
-            "fields": fields,
-            "defaults": defaults,
-            "resources": resources,
         }
     )
 
