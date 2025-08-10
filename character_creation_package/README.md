@@ -79,3 +79,8 @@ You can extend the base catalogs (classes, traits, races, items, and appearance 
   - List enabled packs and counts: `python scripts/list_content_packs.py`
 
 The CLI and TUI automatically load and merge enabled packs at startup; newly added classes and races will appear in selection lists, and appearance enums are unioned with pack-provided values.
+
+## Live Reload (dev)
+
+- Run `python scripts/dev_watch.py` to watch `character_creation/data/` and re-validate on changes.
+- Set `dev.live_reload: true` in `character_creation/data/dev_config.yaml` to auto-reload in the TUI.
