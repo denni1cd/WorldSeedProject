@@ -1,13 +1,13 @@
 {
-  "name": "telon",
+  "name": "Talon2",
   "stats": {
-    "STR": 2.0,
+    "STR": 1.5,
     "STA": 1.0,
-    "WIS": 1.0,
+    "WIS": 1.2,
     "INT": 1.0,
-    "AUT": 1.1,
+    "AUT": 1.0,
     "CHA": 1.1,
-    "DEX": 1.0,
+    "DEX": 2.0,
     "P1": 1.0,
     "P2": 1.0,
     "P3": 1.0,
@@ -35,16 +35,18 @@
     "P4": 0.0
   },
   "classes": [
-    "fighter"
+    "duelist"
   ],
   "abilities": [
-    "Power Strike"
+    "Riposte",
+    "heavenly_resilience",
+    "Arcane Surge"
   ],
   "traits": [
-    "brave",
-    "fiery_spirit"
+    "arcane_attunement",
+    "blessed"
   ],
-  "race": "human",
+  "race": "aasimar",
   "hp": 25.0,
   "mana": 24.0,
   "hp_max": 25.0,

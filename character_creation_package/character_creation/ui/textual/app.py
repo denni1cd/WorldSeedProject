@@ -58,7 +58,15 @@ class NameScreen(Screen):
                 self.query_one("#name_error", Static).update("Please enter a name.")
                 return
             self.app.sel.name = name
-            self.app.push_screen("race")
+            # Route to difficulty if we have profiles, else straight to race
+            try:
+                diffs = list((self.app.balance_cfg or {}).get("difficulties", {}).keys())
+            except Exception:
+                diffs = []
+            if diffs:
+                self.app.push_screen("difficulty")
+            else:
+                self.app.push_screen("race")
 
 
 class RaceScreen(Screen):
@@ -98,6 +106,69 @@ class RaceScreen(Screen):
                 return
             self.app.sel.race_index = int(idx)
             self.app.push_screen("class")
+
+
+class DifficultyScreen(Screen):
+    BINDINGS = [("escape", "app.quit", "Quit")]
+
+    def compose(self) -> ComposeResult:
+        items: List[ListItem] = []
+        difficulties = list((self.app.balance_cfg or {}).get("difficulties", {}).keys())
+        current = str(
+            (self.app.balance_cfg or {}).get("current", difficulties[0] if difficulties else "")
+        )
+        for name in difficulties:
+            label = name + (" (current)" if name == current else "")
+            items.append(ListItem(Static(label), id=name))
+
+        yield Vertical(
+            (
+                Static("Step 2: Choose Difficulty")
+                if difficulties
+                else Static("Difficulty: none configured")
+            ),
+            ListView(*items, id="diff_list") if difficulties else Static(""),
+            Static(id="diff_error"),
+            Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+        )
+
+    def on_mount(self) -> None:
+        try:
+            difficulties = list((self.app.balance_cfg or {}).get("difficulties", {}).keys())
+            current = str(
+                (self.app.balance_cfg or {}).get("current", difficulties[0] if difficulties else "")
+            )
+            lst = self.query_one("#diff_list", ListView)
+            # preselect current
+            for i, item in enumerate(lst.children):
+                if getattr(item, "id", None) == current:
+                    lst.index = i
+                    break
+        except Exception:
+            pass
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "back":
+            self.app.pop_screen()
+            return
+        if event.button.id == "next":
+            # Update current difficulty and profile
+            try:
+                lst = self.query_one("#diff_list", ListView)
+                idx = lst.index
+                if idx is not None and idx >= 0:
+                    item = list(lst.children)[idx]
+                    chosen = getattr(item, "id", None)
+                    if chosen:
+                        self.app.balance_cfg["current"] = chosen
+                        from ...services.balance import (
+                            current_profile,
+                        )  # local import to avoid cycles
+
+                        self.app.balance_profile = current_profile(self.app.balance_cfg)
+            except Exception:
+                pass
+            self.app.push_screen("race")
 
 
 class ClassScreen(Screen):
@@ -147,7 +218,7 @@ class TraitScreen(Screen):
         traits = state.list_traits(self.app.trait_catalog)
         checkboxes: List[Checkbox] = []
         for tid, meta in traits:
-            label = meta.get("name") or tid
+            label = f"{tid}: {meta.get('name') or tid}"
             cb = Checkbox(label, value=False, id=tid)
             if tid in self.app.sel.trait_ids:
                 cb.value = True
@@ -180,14 +251,17 @@ class TraitScreen(Screen):
             return
         if event.button.id == "next":
             container = self.query_one("#trait_checks", Vertical)
-            checked_ids = [cb.id for cb in container.query(Checkbox) if cb.value]
+            # Preserve order from catalog, enforce dedupe and max count
+            catalog_order = [tid for tid, _ in state.list_traits(self.app.trait_catalog)]
+            chosen_set = {cb.id for cb in container.query(Checkbox) if cb.value}
+            chosen_ids = [tid for tid in catalog_order if tid in chosen_set]
             max_allowed = int(getattr(self.app, "traits_max", 2))
-            if len(checked_ids) > max_allowed:
+            if len(chosen_ids) > max_allowed:
                 self.query_one("#trait_error", Static).update(
                     f"Please select at most {max_allowed} traits."
                 )
                 return
-            self.app.sel.trait_ids = checked_ids
+            self.app.sel.trait_ids = chosen_ids
             self.app.push_screen("appearance")
 
 
@@ -485,6 +559,7 @@ class CreationApp(App):
 
         # Register screens and start flow
         self.install_screen(NameScreen(), name="name")
+        self.install_screen(DifficultyScreen(), name="difficulty")
         self.install_screen(RaceScreen(), name="race")
         self.install_screen(ClassScreen(), name="class")
         self.install_screen(TraitScreen(), name="traits")
