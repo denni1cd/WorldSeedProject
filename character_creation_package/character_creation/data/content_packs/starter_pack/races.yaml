@@ -1,0 +1,29 @@
+races:
+  - id: gnome
+    name: Gnome
+    grants_stats: { INT: 0.2, DEX: 0.1 }
+    grants_abilities: ["tinker"]
+  - id: tiefling
+    name: Tiefling
+    grants_stats: { CHA: 0.2, INT: 0.1 }
+    grants_abilities: ["infernal_legacy"]
+  - id: aasimar
+    name: Aasimar
+    grants_stats: { WIS: 0.2, CHA: 0.1 }
+    grants_abilities: ["heavenly_resilience"]
+  - id: lizardfolk
+    name: Lizardfolk
+    grants_stats: { STA: 0.3 }
+    grants_abilities: ["amphibious"]
+  - id: goblin
+    name: Goblin
+    grants_stats: { DEX: 0.2 }
+    grants_abilities: ["nimble_escape"]
+  - id: kitsune
+    name: Kitsune
+    grants_stats: { CHA: 0.2, DEX: 0.1 }
+    grants_abilities: ["foxfire"]
+  - id: automaton
+    name: Automaton
+    grants_stats: { STA: 0.3, INT: 0.1 }
+    grants_abilities: ["mechanical_precision"]

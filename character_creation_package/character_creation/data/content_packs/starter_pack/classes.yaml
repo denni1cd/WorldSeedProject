@@ -1,0 +1,49 @@
+classes:
+  - id: duelist
+    name: Duelist
+    grants_stats: { DEX: 1.0, STR: 0.5 }
+    grants_abilities: ["Riposte"]
+  - id: battlemage
+    name: Battlemage
+    grants_stats: { INT: 1.0, STR: 0.5 }
+    grants_abilities: ["Arcane Slash"]
+  - id: ranger
+    name: Ranger
+    grants_stats: { DEX: 1.0, STA: 0.5 }
+    grants_abilities: ["Multi Shot"]
+  - id: bard
+    name: Bard
+    grants_stats: { CHA: 1.0 }
+    grants_abilities: ["Inspiring Tune"]
+  - id: paladin
+    name: Paladin
+    grants_stats: { STR: 0.8, WIS: 0.8 }
+    grants_abilities: ["Lay on Hands"]
+  - id: monk
+    name: Monk
+    grants_stats: { DEX: 0.8, WIS: 0.8 }
+    grants_abilities: ["Flurry"]
+  - id: necromancer
+    name: Necromancer
+    grants_stats: { INT: 1.2 }
+    grants_abilities: ["Raise Skeleton"]
+  - id: druid
+    name: Druid
+    grants_stats: { WIS: 1.0 }
+    grants_abilities: ["Wild Shape"]
+  - id: barbarian
+    name: Barbarian
+    grants_stats: { STR: 1.2, STA: 0.6 }
+    grants_abilities: ["Rage"]
+  - id: assassin
+    name: Assassin
+    grants_stats: { DEX: 1.2 }
+    grants_abilities: ["Shadowstep"]
+  - id: chronomancer
+    name: Chronomancer
+    grants_stats: { INT: 1.1, WIS: 0.4 }
+    grants_abilities: ["Time Warp"]
+  - id: sentinel
+    name: Sentinel
+    grants_stats: { STA: 1.2 }
+    grants_abilities: ["Guard"]

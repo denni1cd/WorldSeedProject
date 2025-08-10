@@ -8,6 +8,11 @@ from character_creation.loaders import (
     resources_loader,
     races_loader,
 )
+from character_creation.loaders.content_packs_loader import (
+    load_packs_config,
+    load_and_merge_enabled_packs,
+    merge_catalogs,
+)
 from character_creation.ui.cli.wizard import run_wizard, confirm_save_path
 
 
@@ -32,6 +37,36 @@ def main() -> None:
     fields = appearance_loader.load_appearance_fields(fields_path)
     defaults = appearance_loader.load_appearance_defaults(defaults_path)
     resources = resources_loader.load_resources(resources_path)
+
+    # Load content packs config and merged overlays (tolerate absence)
+    packs_cfg_path = root / "character_creation" / "data" / "content_packs.yaml"
+    packs_cfg = load_packs_config(packs_cfg_path)
+    merged_overlay = load_and_merge_enabled_packs(
+        base_root=root / "character_creation" / "data", packs_cfg=packs_cfg
+    )
+
+    # Apply merges to catalogs
+    if merged_overlay:
+        policy = packs_cfg.get("merge", {}).get("on_conflict", "skip")
+        base = {
+            "classes": class_catalog.get("classes", class_catalog),
+            "traits": trait_catalog.get("traits", trait_catalog),
+            "races": race_catalog.get("races", race_catalog),
+        }
+        # Items are optional to CLI run; only pass when needed elsewhere
+        merged_all = merge_catalogs(base, merged_overlay, on_conflict=policy)
+        if "classes" in merged_all:
+            class_catalog = {"classes": merged_all["classes"]}
+        if "traits" in merged_all:
+            trait_catalog = {"traits": merged_all["traits"]}
+        if "races" in merged_all:
+            race_catalog = {"races": merged_all["races"]}
+        # For appearance tables, we hook via services.appearance_logic where needed by passing extras
+        # CLI wizard directly calls get_enum_values; to avoid larger refactor, we will attach
+        # the merged tables onto the fields dict under a private key consumed by get_enum_values.
+        if "appearance_tables" in merged_overlay and isinstance(fields, dict):
+            fields = dict(fields)
+            fields["_extra_appearance_tables"] = merged_overlay["appearance_tables"]
 
     # Run wizard
     hero = run_wizard(

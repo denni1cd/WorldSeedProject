@@ -1,0 +1,4 @@
+enabled:
+  - starter_pack
+merge:
+  on_conflict: "skip"  # one of: "skip" | "override" | "error"

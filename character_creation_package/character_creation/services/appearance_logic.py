@@ -16,7 +16,12 @@ def _read_yaml(path: Path) -> Dict[str, Any] | List[Any] | None:
         return None
 
 
-def get_enum_values(field_id: str, fields_spec: Dict[str, Any], base_dir: Path) -> List[str]:
+def get_enum_values(
+    field_id: str,
+    fields_spec: Dict[str, Any],
+    base_dir: Path,
+    extra_tables: Dict[str, List[Any]] | None = None,
+) -> List[str]:
     """
     If fields_spec[field_id]['type'] == 'enum', read its 'table' yaml under base_dir/'tables'.
     Return list of allowed string values. If missing, return [].
@@ -47,11 +52,33 @@ def get_enum_values(field_id: str, fields_spec: Dict[str, Any], base_dir: Path) 
     else:
         values = []
 
+    # Augment with extra tables if provided. Use the stem of the file as table name key.
+    # Also accept common singular/plural variants for convenience.
+    if isinstance(file_ref, str):
+        stem = Path(file_ref).stem
+    else:
+        stem = ""
+    if extra_tables:
+        candidates = [stem]
+        # simple singular/plural normalization
+        if stem.endswith("s"):
+            candidates.append(stem[:-1])
+        else:
+            candidates.append(stem + "s")
+        for key in candidates:
+            pack_vals = extra_tables.get(key)
+            if isinstance(pack_vals, list):
+                # union preserve order: base first then unique from pack
+                seen = set(values)
+                for v in pack_vals:
+                    if v not in seen:
+                        values.append(v)
+                        seen.add(v)
+
     # Coerce to strings except for explicit None/null
     result: List[str] = []
     for v in values:
         if v is None:
-            # Represent YAML null as string 'null' choice for CLI; actual value is None
             result.append("null")
         else:
             result.append(str(v))

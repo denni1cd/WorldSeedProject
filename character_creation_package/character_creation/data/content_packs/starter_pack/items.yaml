@@ -1,0 +1,130 @@
+items:
+  - id: spear_oak
+    name: Oak Spear
+    slot: [hand_main, hand_off]
+    type: weapon
+    tags: [melee, polearm]
+    mods:
+      stats: { strength: 1.0, agility: 0.5 }
+      abilities: ["pierce"]
+    value: 35
+    weight: 3.0
+
+  - id: staff_ash
+    name: Ash Staff
+    slot: [hand_main]
+    type: weapon
+    tags: [magic, wood]
+    mods:
+      stats: { intelligence: 1.0 }
+      mana: 5.0
+      abilities: ["channel"]
+    value: 60
+    weight: 2.5
+
+  - id: dagger_obsidian
+    name: Obsidian Dagger
+    slot: [hand_main, hand_off]
+    type: weapon
+    tags: [melee, blade]
+    mods:
+      stats: { dexterity: 1.0 }
+      abilities: ["bleed"]
+    value: 45
+    weight: 0.8
+
+  - id: helm_bronze
+    name: Bronze Helm
+    slot: armor_head
+    type: armor
+    tags: [medium, metal]
+    mods:
+      stats: { defense: 1.5 }
+      hp: 2
+    value: 55
+    weight: 2.2
+
+  - id: cuirass_bronze
+    name: Bronze Cuirass
+    slot: armor_top
+    type: armor
+    tags: [medium, metal]
+    mods:
+      stats: { defense: 3.5 }
+      hp: 6
+    value: 140
+    weight: 9.5
+
+  - id: boots_ranger
+    name: Ranger Boots
+    slot: cloth_feet
+    type: clothing
+    tags: [light, leather]
+    mods:
+      stats: { agility: 1.0 }
+    value: 30
+    weight: 0.9
+
+  - id: cloak_shadow
+    name: Shadow Cloak
+    slot: clothing
+    type: clothing
+    tags: [cloth, stealth]
+    mods:
+      stats: { agility: 0.5 }
+      abilities: ["vanish"]
+    value: 120
+    weight: 1.0
+
+  - id: ring_sage
+    name: Sage's Ring
+    slot: accessory
+    type: accessory
+    tags: [jewelry, magic]
+    mods:
+      mana: 10
+      abilities: ["wisdom_insight"]
+    value: 180
+    weight: 0.05
+
+  - id: amulet_guardian
+    name: Guardian Amulet
+    slot: accessory
+    type: accessory
+    tags: [jewelry, protection]
+    mods:
+      stats: { defense: 1.0 }
+      hp: 5
+    value: 160
+    weight: 0.1
+
+  - id: gloves_thief
+    name: Thief's Gloves
+    slot: cloth_wrists
+    type: clothing
+    tags: [light, leather]
+    mods:
+      stats: { agility: 0.5 }
+    value: 25
+    weight: 0.3
+
+  - id: belt_adventurer
+    name: Adventurer's Belt
+    slot: cloth_ankles
+    type: clothing
+    tags: [cloth]
+    mods:
+      stats: { defense: 0.3 }
+    value: 15
+    weight: 0.4
+
+  - id: robe_mystic
+    name: Mystic Robe
+    slot: cloth_torso
+    type: clothing
+    tags: [cloth, magic]
+    mods:
+      stats: { intelligence: 0.8 }
+      mana: 8
+    value: 200
+    weight: 1.8
