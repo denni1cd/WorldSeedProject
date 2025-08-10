@@ -1,0 +1,42 @@
+traits:
+  iron_skin:
+    name: Iron Skin
+    desc: Toughened hide resists damage.
+    grants_stats: { DEF: 1.0 }
+  fleet_footed:
+    name: Fleet-Footed
+    desc: Moves swiftly and silently.
+    grants_stats: { DEX: 0.5 }
+  arcane_attunement:
+    name: Arcane Attunement
+    desc: Natural connection to magic.
+    grants_abilities: ["Arcane Surge"]
+  beast_friend:
+    name: Beast Friend
+    desc: Calms animals with ease.
+  stoic:
+    name: Stoic
+    desc: Resists pain and fear.
+  keen_mind:
+    name: Keen Mind
+    desc: Remembers everything seen.
+    grants_stats: { INT: 0.5 }
+  silver_blood:
+    name: Silver Blood
+    desc: Wards off curses.
+  stoneborn:
+    name: Stoneborn
+    desc: Rooted and resilient.
+    grants_stats: { STA: 0.5 }
+  fiery_spirit:
+    name: Fiery Spirit
+    desc: Passion fuels actions.
+  shadow_touched:
+    name: Shadow-Touched
+    desc: Blends into darkness.
+  blessed:
+    name: Blessed
+    desc: Fortune favors you.
+  tinkerer:
+    name: Tinkerer
+    desc: Expert with gadgets.

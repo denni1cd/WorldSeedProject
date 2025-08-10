@@ -98,6 +98,11 @@ def choose_appearance(
     base_dir = Path(data_dir)
     spec = appearance_fields.get("fields", appearance_fields)
     selections: Dict[str, Any] = {}
+    # Optional extra appearance tables from content packs
+    try:
+        extra_tables = appearance_fields.get("_extra_appearance_tables")
+    except Exception:
+        extra_tables = None
 
     for field_id, meta in spec.items():
         ftype = meta.get("type", "any")
@@ -111,7 +116,7 @@ def choose_appearance(
 
         while True:
             if ftype == "enum":
-                values = get_enum_values(field_id, appearance_fields, base_dir)
+                values = get_enum_values(field_id, appearance_fields, base_dir, extra_tables)
                 if not values:
                     print(f"[warn] No table for enum field '{field_id}', using default")
                     selections[field_id] = default_val

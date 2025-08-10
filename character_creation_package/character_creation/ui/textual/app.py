@@ -20,6 +20,11 @@ from ...loaders import (
 from . import state
 from ...services.appearance_logic import get_enum_values, get_numeric_bounds
 from ...loaders.yaml_utils import load_yaml
+from ...loaders.content_packs_loader import (
+    load_packs_config,
+    load_and_merge_enabled_packs,
+    merge_catalogs,
+)
 
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
@@ -393,6 +398,34 @@ class CreationApp(App):
             self.traits_max = int(lm.get("traits_max", 2))
         except Exception:
             self.traits_max = 2
+
+        # Apply content packs (if any)
+        try:
+            packs_cfg = load_packs_config(DATA_DIR / "content_packs.yaml")
+            merged_overlay = load_and_merge_enabled_packs(DATA_DIR, packs_cfg)
+            if merged_overlay:
+                policy = packs_cfg.get("merge", {}).get("on_conflict", "skip")
+                base = {
+                    "classes": self.class_catalog.get("classes", self.class_catalog),
+                    "traits": self.trait_catalog.get("traits", self.trait_catalog),
+                    "races": self.race_catalog.get("races", self.race_catalog),
+                }
+                merged_all = merge_catalogs(base, merged_overlay, on_conflict=policy)
+                if "classes" in merged_all:
+                    self.class_catalog = {"classes": merged_all["classes"]}
+                if "traits" in merged_all:
+                    self.trait_catalog = {"traits": merged_all["traits"]}
+                if "races" in merged_all:
+                    self.race_catalog = {"races": merged_all["races"]}
+                if "appearance_tables" in merged_overlay and isinstance(
+                    self.appearance_fields, dict
+                ):
+                    self.appearance_fields = dict(self.appearance_fields)
+                    self.appearance_fields["_extra_appearance_tables"] = merged_overlay[
+                        "appearance_tables"
+                    ]
+        except Exception:
+            pass
 
         self.starter_classes = state.list_starter_classes(self.class_catalog)
 

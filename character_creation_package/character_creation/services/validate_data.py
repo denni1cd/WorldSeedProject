@@ -150,3 +150,41 @@ def validate_creation_limits(limits: Dict[str, Any]) -> None:
         step = float(lm["edit_numeric_step"])
         if step <= 0:
             raise DataValidationError("edit_numeric_step must be > 0")
+
+
+# --- New helpers for content packs ---
+def validate_no_duplicate_ids(list_of_dicts: list, kind: str) -> None:
+    seen: Set[str] = set()
+    for entry in list_of_dicts:
+        if not isinstance(entry, dict):
+            raise DataValidationError(f"{kind} entry not a dict: {entry}")
+        eid = entry.get("id")
+        if not isinstance(eid, str) or not eid:
+            raise DataValidationError(f"{kind} entry missing id: {entry}")
+        if eid in seen:
+            raise DataValidationError(f"duplicate {kind} id {eid}")
+        seen.add(eid)
+
+
+def validate_merged_catalogs(merged: Dict[str, Any]) -> None:
+    if not isinstance(merged, dict):
+        raise DataValidationError("merged catalog must be a dict")
+    if "classes" in merged and isinstance(merged["classes"], list):
+        validate_no_duplicate_ids(merged["classes"], "class")
+    if "races" in merged and isinstance(merged["races"], list):
+        validate_no_duplicate_ids(merged["races"], "race")
+    if "items" in merged and isinstance(merged["items"], list):
+        validate_no_duplicate_ids(merged["items"], "item")
+    # traits is a dict; keys uniqueness is inherent in Python dict
+    if "appearance_tables" in merged:
+        tables = merged["appearance_tables"]
+        if not isinstance(tables, dict):
+            raise DataValidationError("appearance_tables must be a dict")
+        for tname, values in tables.items():
+            if not isinstance(values, list):
+                raise DataValidationError(f"appearance table {tname} must be a list")
+            for v in values:
+                if not isinstance(v, (str, int, float)) and v is not None:
+                    raise DataValidationError(
+                        f"appearance table {tname} contains non-scalar value {v!r}"
+                    )

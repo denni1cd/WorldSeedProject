@@ -42,3 +42,40 @@ limits:
 ```
 
 Both the CLI and TUI enforce `traits_max` during selection.
+
+## Content Packs
+
+You can extend the base catalogs (classes, traits, races, items, and appearance tables) via Content Packs without changing any code.
+
+- Config file: `character_creation/data/content_packs.yaml`
+
+  Example:
+
+  ```yaml
+  enabled:
+    - starter_pack
+  merge:
+    on_conflict: "skip"  # one of: "skip" | "override" | "error"
+  ```
+
+- To add or enable a pack:
+  - Place the pack under `character_creation/data/content_packs/<pack_name>/`
+  - Reference it under `enabled:` in `content_packs.yaml`
+
+- Supported files inside a pack (all optional):
+  - `classes.yaml` (list or {classes: [...]})
+  - `traits.yaml` ({traits: {...}} or direct mapping)
+  - `races.yaml` (list or {races: [...]})
+  - `items.yaml` (list or {items: [...]})
+  - `appearance/tables/*.yaml` (list or {values: [...]})
+
+- Merge policies:
+  - **skip**: keep base entry when ids collide
+  - **override**: replace base entry with pack's
+  - **error**: raise on id collision
+
+- Validation and tooling:
+  - Validate data: `python scripts/validate_data.py`
+  - List enabled packs and counts: `python scripts/list_content_packs.py`
+
+The CLI and TUI automatically load and merge enabled packs at startup; newly added classes and races will appear in selection lists, and appearance enums are unioned with pack-provided values.

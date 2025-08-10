@@ -25,6 +25,11 @@ from character_creation.services.validate_data import (
     validate_numeric_range,
     validate_creation_limits,
 )
+from character_creation.loaders.content_packs_loader import (
+    load_packs_config,
+    load_and_merge_enabled_packs,
+    merge_catalogs,
+)
 
 
 def main() -> int:
@@ -85,6 +90,21 @@ def main() -> int:
             validate_numeric_range(any_range, any_range_name)
         if limits:
             validate_creation_limits(limits)
+        # Validate merged content packs overlay (if any)
+        cfg = load_packs_config(root / "content_packs.yaml")
+        overlay = load_and_merge_enabled_packs(root, cfg)
+        if overlay:
+            base = {
+                "classes": classes.get("classes", classes),
+                "traits": traits.get("traits", traits),
+                "races": races.get("races", races),
+            }
+            merged_all = merge_catalogs(
+                base, overlay, on_conflict=(cfg.get("merge") or {}).get("on_conflict", "skip")
+            )
+            from character_creation.services.validate_data import validate_merged_catalogs
+
+            validate_merged_catalogs(merged_all)
         print("OK")
         return 0
     except DataValidationError as e:
