@@ -9,6 +9,7 @@ from ...services.appearance_logic import (
     coerce_numeric,
     default_for_field,
 )
+from ...loaders.yaml_utils import load_yaml
 
 
 def ask_name() -> str:
@@ -46,7 +47,7 @@ def choose_traits(trait_catalog: Dict[str, dict], max_count: int = 2) -> List[st
             continue
         valid = validate_traits(selected, trait_catalog)
         if valid:
-            return valid
+            return valid[:max_count]
         print("No valid traits selected. Try again.")
 
 
@@ -61,6 +62,24 @@ def _safe_input(prompt: str) -> str:
     except Exception:
         # Fallback to default command when inputs are exhausted (e.g., tests)
         return "d"
+
+
+def _load_creation_limits() -> dict:
+    """Load creation_limits.yaml if present; return dict with defaults on failure."""
+    try:
+        # character_creation/ui/cli/wizard.py -> .../character_creation/data/creation_limits.yaml
+        limits_path = (
+            Path(__file__).parents[3] / "character_creation" / "data" / "creation_limits.yaml"
+        )
+        if limits_path.exists():
+            data = load_yaml(limits_path)
+        else:
+            data = {}
+    except Exception:
+        data = {}
+    lm = data.get("limits", data) if isinstance(data, dict) else {}
+    # Safe defaults
+    return {"traits_max": int(lm.get("traits_max", 2))}
 
 
 def choose_appearance(
@@ -187,9 +206,13 @@ def run_wizard(loaders_dict: dict):
     trait_catalog = loaders_dict["trait_catalog"]
     race_catalog = loaders_dict.get("race_catalog", {"races": []})
     starting_classes = available_starting_classes(stat_tmpl, class_catalog)
+    # Load creation limits (safe defaults if missing)
+    limits = _load_creation_limits()
+    traits_max = int(limits.get("traits_max", 2))
+
     race_def = choose_race(race_catalog)
     class_def = choose_starting_class(starting_classes)
-    traits = choose_traits(trait_catalog)
+    traits = choose_traits(trait_catalog, max_count=traits_max)
     # Appearance step
     try:
         app_dir = _resolve_appearance_dir()
@@ -211,4 +234,54 @@ def run_wizard(loaders_dict: dict):
         character.appearance.update(appearance_selection)
     except Exception:
         pass
+
+    # Compact summary before save prompt (done by caller)
+    try:
+        race_label = (race_def.get("name") or race_def.get("id")) if race_def else ""
+    except Exception:
+        race_label = ""
+    try:
+        class_label = class_def.get("name") or class_def.get("id") or ""
+    except Exception:
+        class_label = ""
+    # Trait names
+    trait_meta = (trait_catalog or {}).get("traits", {})
+    trait_names = []
+    for tid in getattr(character, "traits", []) or []:
+        meta = trait_meta.get(tid, {})
+        trait_names.append(meta.get("name") or tid)
+    trait_csv = ", ".join(trait_names)
+    # HP/Mana current/base
+    hp_line = (
+        f"{getattr(character, 'hp', 0)}/{getattr(character, 'hp_max', getattr(character, 'hp', 0))}"
+    )
+    mana_line = f"{getattr(character, 'mana', 0)}/{getattr(character, 'mana_max', getattr(character, 'mana', 0))}"
+    # Core stats
+    stats = getattr(character, "stats", {}) or {}
+    core_keys = ["STR", "DEX", "INT", "CHA", "STA"]
+    core_pairs = [f"{k}={stats.get(k)}" for k in core_keys if k in stats]
+    stats_line = " ".join(core_pairs)
+    # Appearance peek
+    app = getattr(character, "appearance", {}) or {}
+    eye = app.get("eye_color")
+    hair = app.get("hair_color")
+    height = app.get("height_cm")
+    weight = app.get("weight_kg")
+    appearance_line = ", ".join(
+        [
+            f"eye={eye}",
+            f"hair={hair}",
+            f"height={height}",
+            f"weight={weight}",
+        ]
+    )
+
+    print(f"Name: {character.name}")
+    print(f"Race: {race_label}")
+    print(f"Class: {class_label}")
+    print(f"Traits: {trait_csv}")
+    print(f"HP/Mana: {hp_line} | {mana_line}")
+    print(f"Stats: {stats_line}")
+    print(f"Appearance: {appearance_line}")
+
     return character
