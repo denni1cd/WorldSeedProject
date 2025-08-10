@@ -14,6 +14,13 @@ Run the textual TUI:
 
 ```bash
 python scripts/run_tui.py
+Run the optional Qt GUI (install PySide6 first):
+
+```bash
+pip install PySide6
+python scripts/run_qt.py
+```
+
 ```
 
 Run the CLI wizard:

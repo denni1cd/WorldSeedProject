@@ -40,14 +40,16 @@ class NameScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Vertical(
-            Static("Step 1: Enter Character Name"),
-            Input(placeholder="Name", id="name_input"),
-            Static(id="name_error"),
-            Horizontal(
-                Button("Next", id="next"),
-                id="name_buttons",
+            Static("WorldSeed: Character Creation", id="banner"),
+            Static(self.app.render_stepbar("Name"), id="stepbar"),
+            Vertical(
+                Static("Enter Character Name", classes="title"),
+                Input(placeholder="Name", id="name_input"),
+                Static(id="name_error", classes="hint"),
+                Horizontal(Button("Next", id="next"), id="name_buttons"),
+                id="name_panel",
             ),
-            id="name_panel",
+            id="frame",
         )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -58,7 +60,15 @@ class NameScreen(Screen):
                 self.query_one("#name_error", Static).update("Please enter a name.")
                 return
             self.app.sel.name = name
-            self.app.push_screen("race")
+            # Route to difficulty if we have profiles, else straight to race
+            try:
+                diffs = list((self.app.balance_cfg or {}).get("difficulties", {}).keys())
+            except Exception:
+                diffs = []
+            if diffs:
+                self.app.push_screen("difficulty")
+            else:
+                self.app.push_screen("race")
 
 
 class RaceScreen(Screen):
@@ -72,10 +82,15 @@ class RaceScreen(Screen):
             items.append(ListItem(Static(label)))
 
         yield Vertical(
-            Static("Step 2: Choose Race"),
-            ListView(*items, id="race_list"),
-            Static(id="race_error"),
-            Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+            Static("WorldSeed: Character Creation", id="banner"),
+            Static(self.app.render_stepbar("Race"), id="stepbar"),
+            Vertical(
+                Static("Choose Race", classes="title"),
+                ListView(*items, id="race_list"),
+                Static(id="race_error", classes="hint"),
+                Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+            ),
+            id="frame",
         )
 
     def on_mount(self) -> None:
@@ -100,6 +115,69 @@ class RaceScreen(Screen):
             self.app.push_screen("class")
 
 
+class DifficultyScreen(Screen):
+    BINDINGS = [("escape", "app.quit", "Quit")]
+
+    def compose(self) -> ComposeResult:
+        items: List[ListItem] = []
+        difficulties = list((self.app.balance_cfg or {}).get("difficulties", {}).keys())
+        current = str(
+            (self.app.balance_cfg or {}).get("current", difficulties[0] if difficulties else "")
+        )
+        for name in difficulties:
+            label = name + (" (current)" if name == current else "")
+            items.append(ListItem(Static(label), id=name))
+
+        yield Vertical(
+            (
+                Static("Step 2: Choose Difficulty")
+                if difficulties
+                else Static("Difficulty: none configured")
+            ),
+            ListView(*items, id="diff_list") if difficulties else Static(""),
+            Static(id="diff_error"),
+            Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+        )
+
+    def on_mount(self) -> None:
+        try:
+            difficulties = list((self.app.balance_cfg or {}).get("difficulties", {}).keys())
+            current = str(
+                (self.app.balance_cfg or {}).get("current", difficulties[0] if difficulties else "")
+            )
+            lst = self.query_one("#diff_list", ListView)
+            # preselect current
+            for i, item in enumerate(lst.children):
+                if getattr(item, "id", None) == current:
+                    lst.index = i
+                    break
+        except Exception:
+            pass
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "back":
+            self.app.pop_screen()
+            return
+        if event.button.id == "next":
+            # Update current difficulty and profile
+            try:
+                lst = self.query_one("#diff_list", ListView)
+                idx = lst.index
+                if idx is not None and idx >= 0:
+                    item = list(lst.children)[idx]
+                    chosen = getattr(item, "id", None)
+                    if chosen:
+                        self.app.balance_cfg["current"] = chosen
+                        from ...services.balance import (
+                            current_profile,
+                        )  # local import to avoid cycles
+
+                        self.app.balance_profile = current_profile(self.app.balance_cfg)
+            except Exception:
+                pass
+            self.app.push_screen("race")
+
+
 class ClassScreen(Screen):
     BINDINGS = [("escape", "app.quit", "Quit")]
 
@@ -111,10 +189,15 @@ class ClassScreen(Screen):
             items.append(ListItem(Static(label)))
 
         yield Vertical(
-            Static("Step 3: Choose Starting Class"),
-            ListView(*items, id="class_list"),
-            Static(id="class_error"),
-            Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+            Static("WorldSeed: Character Creation", id="banner"),
+            Static(self.app.render_stepbar("Class"), id="stepbar"),
+            Vertical(
+                Static("Choose Starting Class", classes="title"),
+                ListView(*items, id="class_list"),
+                Static(id="class_error", classes="hint"),
+                Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+            ),
+            id="frame",
         )
 
     def on_mount(self) -> None:
@@ -147,17 +230,22 @@ class TraitScreen(Screen):
         traits = state.list_traits(self.app.trait_catalog)
         checkboxes: List[Checkbox] = []
         for tid, meta in traits:
-            label = meta.get("name") or tid
+            label = f"{tid}: {meta.get('name') or tid}"
             cb = Checkbox(label, value=False, id=tid)
             if tid in self.app.sel.trait_ids:
                 cb.value = True
             checkboxes.append(cb)
 
         yield Vertical(
-            Static(f"Step 4: Choose up to {self.app.traits_max} Traits"),
-            Vertical(*checkboxes, id="trait_checks"),
-            Static(id="trait_error"),
-            Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+            Static("WorldSeed: Character Creation", id="banner"),
+            Static(self.app.render_stepbar("Traits"), id="stepbar"),
+            Vertical(
+                Static(f"Choose up to {self.app.traits_max} Traits", classes="title"),
+                Vertical(*checkboxes, id="trait_checks"),
+                Static(id="trait_error", classes="hint"),
+                Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+            ),
+            id="frame",
         )
 
     def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
@@ -180,14 +268,17 @@ class TraitScreen(Screen):
             return
         if event.button.id == "next":
             container = self.query_one("#trait_checks", Vertical)
-            checked_ids = [cb.id for cb in container.query(Checkbox) if cb.value]
+            # Preserve order from catalog, enforce dedupe and max count
+            catalog_order = [tid for tid, _ in state.list_traits(self.app.trait_catalog)]
+            chosen_set = {cb.id for cb in container.query(Checkbox) if cb.value}
+            chosen_ids = [tid for tid in catalog_order if tid in chosen_set]
             max_allowed = int(getattr(self.app, "traits_max", 2))
-            if len(checked_ids) > max_allowed:
+            if len(chosen_ids) > max_allowed:
                 self.query_one("#trait_error", Static).update(
                     f"Please select at most {max_allowed} traits."
                 )
                 return
-            self.app.sel.trait_ids = checked_ids
+            self.app.sel.trait_ids = chosen_ids
             self.app.push_screen("appearance")
 
 
@@ -220,10 +311,15 @@ class AppearanceScreen(Screen):
                 rows.append(Static(f"{label}: {meta.get('default')}", id=f"any_{fid}"))
 
         yield Vertical(
-            Static("Step 5: Appearance"),
-            Vertical(*rows, id="appearance_rows"),
-            Static(id="appearance_error"),
-            Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+            Static("WorldSeed: Character Creation", id="banner"),
+            Static(self.app.render_stepbar("Appearance"), id="stepbar"),
+            Vertical(
+                Static("Appearance", classes="title"),
+                Vertical(*rows, id="appearance_rows"),
+                Static(id="appearance_error", classes="hint"),
+                Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+            ),
+            id="frame",
         )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -318,21 +414,26 @@ class SummaryScreen(Screen):
         )
 
         content = Vertical(
-            Static("Step 6: Summary & Save"),
-            Static(f"Name: {summary.get('name', '')}"),
-            Static(f"Race: {summary.get('race_label', '')}"),
-            Static(f"Class: {summary.get('class_label', '')}"),
-            Static(f"Traits: {', '.join(summary.get('traits_labels', []))}"),
-            Static(f"Difficulty: {difficulty_label}") if difficulty_label else Static(""),
-            Static(f"HP: {summary.get('hp')}  Mana: {summary.get('mana')}"),
-            Static("Stats:"),
-            Static(stats_text),
-            Static("Appearance:"),
-            Static(peek_text),
-            Static("Save Path (default hero.json):"),
-            Input(value="hero.json", id="save_path"),
-            Static(id="save_msg"),
-            Horizontal(Button("Back", id="back"), Button("Save", id="save")),
+            Static("WorldSeed: Character Creation", id="banner"),
+            Static(self.app.render_stepbar("Summary"), id="stepbar"),
+            Vertical(
+                Static("Summary & Save", classes="title"),
+                Static(f"Name: {summary.get('name', '')}"),
+                Static(f"Race: {summary.get('race_label', '')}"),
+                Static(f"Class: {summary.get('class_label', '')}"),
+                Static(f"Traits: {', '.join(summary.get('traits_labels', []))}"),
+                Static(f"Difficulty: {difficulty_label}") if difficulty_label else Static(""),
+                Static(f"HP: {summary.get('hp')}  Mana: {summary.get('mana')}"),
+                Static("Stats:"),
+                Static(stats_text),
+                Static("Appearance:"),
+                Static(peek_text),
+                Static("Save Path (default hero.json):"),
+                Input(value="hero.json", id="save_path"),
+                Static(id="save_msg"),
+                Horizontal(Button("Back", id="back"), Button("Save", id="save")),
+            ),
+            id="frame",
         )
         yield content
 
@@ -381,7 +482,51 @@ class SummaryScreen(Screen):
 
 
 class CreationApp(App):
-    CSS = ""
+    CSS = """
+    Screen {
+      align: center middle;
+      background: #0f0f17;
+    }
+    #frame {
+      width: 80%;
+      max-width: 100;
+      border: round $accent;
+      padding: 1 2;
+      background: #151525;
+    }
+    #banner {
+      content-align: center middle;
+      color: #e0d8b0;
+      text-style: bold;
+      background: #2a1f1a;
+      height: 3;
+    }
+    #stepbar {
+      height: 1;
+      color: #9ec1a3;
+      content-align: center middle;
+      background: #1b1b2f;
+    }
+    .title {
+      content-align: center middle;
+      height: 2;
+      color: #e3c77a;
+      text-style: bold;
+    }
+    .hint {
+      color: #87a;
+    }
+    ListView {
+      height: 12;
+      border: panel;
+    }
+    Input {
+      border: panel;
+    }
+    Button {
+      margin: 1 1;
+    }
+    """
     TITLE = "Character Creation"
 
     def __init__(self) -> None:
@@ -485,6 +630,7 @@ class CreationApp(App):
 
         # Register screens and start flow
         self.install_screen(NameScreen(), name="name")
+        self.install_screen(DifficultyScreen(), name="difficulty")
         self.install_screen(RaceScreen(), name="race")
         self.install_screen(ClassScreen(), name="class")
         self.install_screen(TraitScreen(), name="traits")
@@ -591,6 +737,25 @@ class CreationApp(App):
             self.call_from_thread(self.set_footer, f"Data reloaded (v{version})")
         except Exception:
             pass
+
+    # --- Helpers ---
+    def render_stepbar(self, current_step: str) -> str:
+        steps = [
+            "Name",
+            "Difficulty",
+            "Race",
+            "Class",
+            "Traits",
+            "Appearance",
+            "Summary",
+        ]
+        parts: list[str] = []
+        for step in steps:
+            if step == current_step:
+                parts.append(f"[bold][#e3c77a]{step}[/]")
+            else:
+                parts.append(step)
+        return "  »  ".join(parts)
 
 
 def run() -> None:
