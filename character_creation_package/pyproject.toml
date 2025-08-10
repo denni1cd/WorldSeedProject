@@ -21,6 +21,7 @@ dependencies = [
 [project.scripts]
 worldseed-wizard = "scripts.create_character:main"
 worldseed-tui = "scripts.run_tui:main"
+worldseed-validate = "scripts.validate_data:main"
 worldseed-npc-demo = "scripts.generate_npcs:main"
 worldseed-xp-demo = "scripts.grant_xp:main"
 worldseed-regen-demo = "scripts.sim_regen:main"

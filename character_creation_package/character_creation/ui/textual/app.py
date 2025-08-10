@@ -19,6 +19,7 @@ from ...loaders import (
 )
 from . import state
 from ...services.appearance_logic import get_enum_values, get_numeric_bounds
+from ...loaders.yaml_utils import load_yaml
 
 
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
@@ -143,20 +144,23 @@ class TraitScreen(Screen):
             checkboxes.append(cb)
 
         yield Vertical(
-            Static("Step 4: Choose up to 2 Traits"),
+            Static(f"Step 4: Choose up to {self.app.traits_max} Traits"),
             Vertical(*checkboxes, id="trait_checks"),
             Static(id="trait_error"),
             Horizontal(Button("Back", id="back"), Button("Next", id="next")),
         )
 
     def on_checkbox_changed(self, event: Checkbox.Changed) -> None:
-        # Enforce max 2 selections
+        # Enforce max selections from limits
         container = self.query_one("#trait_checks", Vertical)
         checked_ids = {cb.id for cb in container.query(Checkbox) if cb.value}
-        if len(checked_ids) > 2:
+        max_allowed = int(getattr(self.app, "traits_max", 2))
+        if len(checked_ids) > max_allowed:
             # Undo the latest toggle
             event.checkbox.value = False
-            self.query_one("#trait_error", Static).update("You can select at most 2 traits.")
+            self.query_one("#trait_error", Static).update(
+                f"You can select at most {max_allowed} traits."
+            )
         else:
             self.query_one("#trait_error", Static).update("")
 
@@ -167,8 +171,11 @@ class TraitScreen(Screen):
         if event.button.id == "next":
             container = self.query_one("#trait_checks", Vertical)
             checked_ids = [cb.id for cb in container.query(Checkbox) if cb.value]
-            if len(checked_ids) > 2:
-                self.query_one("#trait_error", Static).update("Please select at most 2 traits.")
+            max_allowed = int(getattr(self.app, "traits_max", 2))
+            if len(checked_ids) > max_allowed:
+                self.query_one("#trait_error", Static).update(
+                    f"Please select at most {max_allowed} traits."
+                )
                 return
             self.app.sel.trait_ids = checked_ids
             self.app.push_screen("appearance")
@@ -353,6 +360,8 @@ class CreationApp(App):
         # User selections
         self.sel = state.CreationSelections(name="", class_index=0, trait_ids=[])
         self.appearance_selection: Dict[str, Any] = {}
+        # Limits
+        self.traits_max: int = 2
 
     def on_mount(self) -> None:
         # Load all YAML at startup
@@ -364,6 +373,7 @@ class CreationApp(App):
         fields_path = DATA_DIR / "appearance" / "fields.yaml"
         defaults_path = DATA_DIR / "appearance" / "defaults.yaml"
         resources_path = DATA_DIR / "resources.yaml"
+        limits_path = DATA_DIR / "creation_limits.yaml"
 
         self.stat_tmpl = stats_loader.load_stat_template(stats_path)
         self.class_catalog = classes_loader.load_class_catalog(classes_path)
@@ -373,6 +383,16 @@ class CreationApp(App):
         self.appearance_fields = appearance_loader.load_appearance_fields(fields_path)
         self.appearance_defaults = appearance_loader.load_appearance_defaults(defaults_path)
         self.resources = resources_loader.load_resources(resources_path)
+        # Load creation limits (optional)
+        try:
+            if limits_path.exists():
+                data = load_yaml(limits_path)
+            else:
+                data = {}
+            lm = data.get("limits", data) if isinstance(data, dict) else {}
+            self.traits_max = int(lm.get("traits_max", 2))
+        except Exception:
+            self.traits_max = 2
 
         self.starter_classes = state.list_starter_classes(self.class_catalog)
 
