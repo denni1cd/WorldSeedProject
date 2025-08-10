@@ -18,6 +18,15 @@ dependencies = [
     "textual>=0.60"
 ]
 
+[project.scripts]
+worldseed-wizard = "scripts.create_character:main"
+worldseed-tui = "scripts.run_tui:main"
+worldseed-npc-demo = "scripts.generate_npcs:main"
+worldseed-xp-demo = "scripts.grant_xp:main"
+worldseed-regen-demo = "scripts.sim_regen:main"
+worldseed-effects-demo = "scripts.sim_status_effects:main"
+worldseed-save-demo = "scripts.demo_save_load:main"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0",
@@ -34,3 +43,10 @@ line-length = 100
 
 [tool.setuptools.packages.find]
 where = ["character_creation"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_unused_ignores = true
+warn_redundant_casts = true
+disallow_untyped_defs = true
+ignore_missing_imports = true

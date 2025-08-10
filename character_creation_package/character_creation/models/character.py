@@ -4,6 +4,7 @@ from typing import Dict, List, Set, Optional, Any
 from pathlib import Path
 import json
 from character_creation.services.formula_eval import evaluate
+from character_creation.errors import EquipmentError
 
 
 @dataclass
@@ -81,7 +82,7 @@ class Character:
 
     def equip(self, item_id: str, slot_id: str, items_catalog: Dict[str, Any]) -> None:
         if slot_id not in self.equipment:
-            raise ValueError(f"Invalid slot_id: {slot_id}")
+            raise EquipmentError(f"Invalid slot_id: {slot_id}")
         # Remove the item from inventory if present (once)
         if item_id in self.inventory:
             self.inventory.remove(item_id)
@@ -101,7 +102,7 @@ class Character:
 
     def unequip(self, slot_id: str, items_catalog: Dict[str, Any]) -> None:
         if slot_id not in self.equipment:
-            raise ValueError(f"Invalid slot_id: {slot_id}")
+            raise EquipmentError(f"Invalid slot_id: {slot_id}")
         if self.equipment.get(slot_id) is not None:
             item = self.equipment[slot_id]
             # Only append if not already present in inventory

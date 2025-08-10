@@ -9,7 +9,8 @@ from character_creation.loaders import (
 )
 from character_creation.ui.cli.wizard import run_wizard, confirm_save_path
 
-if __name__ == "__main__":
+
+def main() -> None:
     root = Path(__file__).parents[1]
     # Resolve data paths
     stats_path = root / "character_creation" / "data" / "stats" / "stats.yaml"
@@ -47,3 +48,7 @@ if __name__ == "__main__":
     save_path = confirm_save_path(default_path)
     hero.to_json(save_path)
     print(f"Character saved to {save_path}")
+
+
+if __name__ == "__main__":
+    main()
