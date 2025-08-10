@@ -12,6 +12,7 @@ from ...loaders import (
     stats_loader,
     classes_loader,
     traits_loader,
+    races_loader,
     slots_loader,
     appearance_loader,
     resources_loader,
@@ -45,6 +46,45 @@ class NameScreen(Screen):
                 self.query_one("#name_error", Static).update("Please enter a name.")
                 return
             self.app.sel.name = name
+            self.app.push_screen("race")
+
+
+class RaceScreen(Screen):
+    BINDINGS = [("escape", "app.quit", "Quit")]
+
+    def compose(self) -> ComposeResult:
+        races = state.list_races(self.app.race_catalog)
+        items: List[ListItem] = []
+        for r in races:
+            label = r.get("name") or r.get("id") or "Unknown"
+            items.append(ListItem(Static(label)))
+
+        yield Vertical(
+            Static("Step 2: Choose Race"),
+            ListView(*items, id="race_list"),
+            Static(id="race_error"),
+            Horizontal(Button("Back", id="back"), Button("Next", id="next")),
+        )
+
+    def on_mount(self) -> None:
+        lst = self.query_one("#race_list", ListView)
+        if self.app.sel.race_index is not None:
+            try:
+                lst.index = int(self.app.sel.race_index)
+            except Exception:
+                pass
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "back":
+            self.app.pop_screen()
+            return
+        if event.button.id == "next":
+            lst = self.query_one("#race_list", ListView)
+            idx = lst.index
+            if idx is None or idx < 0:
+                self.query_one("#race_error", Static).update("Please select a race.")
+                return
+            self.app.sel.race_index = int(idx)
             self.app.push_screen("class")
 
 
@@ -59,7 +99,7 @@ class ClassScreen(Screen):
             items.append(ListItem(Static(label)))
 
         yield Vertical(
-            Static("Step 2: Choose Starting Class"),
+            Static("Step 3: Choose Starting Class"),
             ListView(*items, id="class_list"),
             Static(id="class_error"),
             Horizontal(Button("Back", id="back"), Button("Next", id="next")),
@@ -102,7 +142,7 @@ class TraitScreen(Screen):
             checkboxes.append(cb)
 
         yield Vertical(
-            Static("Step 3: Choose up to 2 Traits"),
+            Static("Step 4: Choose up to 2 Traits"),
             Vertical(*checkboxes, id="trait_checks"),
             Static(id="trait_error"),
             Horizontal(Button("Back", id="back"), Button("Next", id="next")),
@@ -147,10 +187,15 @@ class SummaryScreen(Screen):
             self.app.resources,
             self.app.class_catalog,
             self.app.trait_catalog,
+            self.app.race_catalog,
         )
 
         summary = state.summarize_character(
-            preview, self.app.starter_classes, self.app.sel.class_index, self.app.trait_catalog
+            preview,
+            self.app.starter_classes,
+            self.app.sel.class_index,
+            self.app.trait_catalog,
+            self.app.race_catalog,
         )
 
         # Short stat preview: first few stats only
@@ -159,8 +204,9 @@ class SummaryScreen(Screen):
         stats_text = "\n".join(stats_lines)
 
         content = Vertical(
-            Static("Step 4: Summary & Save"),
+            Static("Step 5: Summary & Save"),
             Static(f"Name: {summary.get('name', '')}"),
+            Static(f"Race: {summary.get('race_label', '')}"),
             Static(f"Class: {summary.get('class_label', '')}"),
             Static(f"Traits: {', '.join(summary.get('traits_labels', []))}"),
             Static(f"HP: {summary.get('hp')}  Mana: {summary.get('mana')}"),
@@ -190,6 +236,7 @@ class SummaryScreen(Screen):
                     self.app.resources,
                     self.app.class_catalog,
                     self.app.trait_catalog,
+                    self.app.race_catalog,
                 )
                 hero.to_json(Path(path))
                 self.query_one("#save_msg", Static).update(f"Saved to {path}")
@@ -211,6 +258,7 @@ class CreationApp(App):
         self.resources: Dict[str, Any] = {}
         self.class_catalog: Dict[str, Any] = {}
         self.trait_catalog: Dict[str, Any] = {}
+        self.race_catalog: Dict[str, Any] = {}
         # Derived
         self.starter_classes: List[Dict[str, Any]] = []
         # User selections
@@ -221,6 +269,7 @@ class CreationApp(App):
         stats_path = DATA_DIR / "stats" / "stats.yaml"
         classes_path = DATA_DIR / "classes.yaml"
         traits_path = DATA_DIR / "traits.yaml"
+        races_path = DATA_DIR / "races.yaml"
         slots_path = DATA_DIR / "slots.yaml"
         fields_path = DATA_DIR / "appearance" / "fields.yaml"
         defaults_path = DATA_DIR / "appearance" / "defaults.yaml"
@@ -229,6 +278,7 @@ class CreationApp(App):
         self.stat_tmpl = stats_loader.load_stat_template(stats_path)
         self.class_catalog = classes_loader.load_class_catalog(classes_path)
         self.trait_catalog = traits_loader.load_trait_catalog(traits_path)
+        self.race_catalog = races_loader.load_race_catalog(races_path)
         self.slot_tmpl = slots_loader.load_slot_template(slots_path)
         self.appearance_fields = appearance_loader.load_appearance_fields(fields_path)
         self.appearance_defaults = appearance_loader.load_appearance_defaults(defaults_path)
@@ -238,6 +288,7 @@ class CreationApp(App):
 
         # Register screens and start flow
         self.install_screen(NameScreen(), name="name")
+        self.install_screen(RaceScreen(), name="race")
         self.install_screen(ClassScreen(), name="class")
         self.install_screen(TraitScreen(), name="traits")
         self.install_screen(SummaryScreen(), name="summary")

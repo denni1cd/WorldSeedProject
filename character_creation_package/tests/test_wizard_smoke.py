@@ -3,6 +3,7 @@ from character_creation.loaders import (
     stats_loader,
     classes_loader,
     traits_loader,
+    races_loader,
     slots_loader,
     appearance_loader,
     resources_loader,
@@ -18,6 +19,7 @@ def loaders_dict():
         "stat_tmpl": stats_loader.load_stat_template(DATA_ROOT / "stats" / "stats.yaml"),
         "class_catalog": classes_loader.load_class_catalog(DATA_ROOT / "classes.yaml"),
         "trait_catalog": traits_loader.load_trait_catalog(DATA_ROOT / "traits.yaml"),
+        "race_catalog": races_loader.load_race_catalog(DATA_ROOT / "races.yaml"),
         "slot_tmpl": slots_loader.load_slot_template(DATA_ROOT / "slots.yaml"),
         "appearance_fields": appearance_loader.load_appearance_fields(
             DATA_ROOT / "appearance" / "fields.yaml"
@@ -34,6 +36,7 @@ def test_run_wizard_smoke(monkeypatch, loaders_dict):
     inputs = iter(
         [
             "TestHero",  # name
+            "1",  # race pick (first race)
             "1",  # class pick
             "brave, lucky",  # traits
             "",  # save path (accept default)
@@ -45,6 +48,10 @@ def test_run_wizard_smoke(monkeypatch, loaders_dict):
 
     hero = run_wizard(loaders_dict)
     assert hero.name == "TestHero"
+    assert getattr(hero, "race", None) is not None
+    # Label resolution via catalog
+    first_race = loaders_dict["race_catalog"].get("races", [])[0]
+    assert first_race["id"] == hero.race
     assert "brave" in getattr(hero, "traits", [])
     starting_classes = loaders_dict["class_catalog"].get("classes", [])
     first_class_id = starting_classes[0].get("id")

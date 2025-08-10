@@ -15,6 +15,7 @@ class Character:
     classes: List[str] = field(default_factory=list)
     abilities: Set[str] = field(default_factory=set)
     traits: List[str] = field(default_factory=list)
+    race: str | None = None
     hp: float = 20.0
     mana: float = 20.0
     hp_max: float = 0.0
@@ -476,3 +477,30 @@ class Character:
         from character_creation.loaders import save_loader
 
         return save_loader.load_character(save_path, cls)
+
+    def set_race(self, race_id: str, race_catalog: dict) -> None:
+        """
+        Set self.race = race_id; find the race def by id in race_catalog['races'].
+        Apply grants_stats via increase_stat; add grants_abilities into abilities set.
+        If race_id not found, do nothing (fail gracefully).
+        """
+        try:
+            races = (race_catalog or {}).get("races", [])
+            race_def = None
+            for r in races:
+                if isinstance(r, dict) and r.get("id") == race_id:
+                    race_def = r
+                    break
+            if not race_def:
+                return
+            self.race = race_id
+            for stat, val in race_def.get("grants_stats", {}).items():
+                try:
+                    self.increase_stat(stat, float(val))
+                except Exception:
+                    continue
+            for ability in race_def.get("grants_abilities", []):
+                self.abilities.add(ability)
+        except Exception:
+            # Fail gracefully on malformed catalogs
+            return
