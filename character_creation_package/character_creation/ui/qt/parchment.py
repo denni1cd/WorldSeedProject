@@ -1,6 +1,13 @@
 from __future__ import annotations
 import random
-from PySide6.QtGui import QImage, QPixmap, QColor, QPainter, QRadialGradient, QLinearGradient
+from PySide6.QtGui import (
+    QImage,
+    QPixmap,
+    QColor,
+    QPainter,
+    QRadialGradient,
+    QLinearGradient,
+)
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtWidgets import QWidget
 
@@ -45,7 +52,9 @@ def generate_parchment(size: QSize) -> QPixmap:
 
 def apply_parchment_background(widget: QWidget) -> None:
     # Use palette background so it scales with window
-    pm = generate_parchment(widget.size() if widget.size().isValid() else QSize(1200, 800))
+    pm = generate_parchment(
+        widget.size() if widget.size().isValid() else QSize(1200, 800)
+    )
     pal = widget.palette()
     pal.setBrush(widget.backgroundRole(), pm)
     widget.setPalette(pal)

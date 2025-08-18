@@ -16,7 +16,9 @@ def loaded():
     return {
         "stats": stats_loader.load_stat_template(root / "stats" / "stats.yaml"),
         "slots": slots_loader.load_slot_template(root / "slots.yaml"),
-        "fields": appearance_loader.load_appearance_fields(root / "appearance" / "fields.yaml"),
+        "fields": appearance_loader.load_appearance_fields(
+            root / "appearance" / "fields.yaml"
+        ),
         "defaults": appearance_loader.load_appearance_defaults(
             root / "appearance" / "defaults.yaml"
         ),
@@ -42,9 +44,14 @@ def test_level_up_and_stat_points(loaded):
     start_level = hero.level
     start_hp = hero.hp
     start_mana = hero.mana
-    gained = hero.add_general_xp(200.0, loaded["formulas"], loaded["stats"], loaded["progression"])
+    gained = hero.add_general_xp(
+        200.0, loaded["formulas"], loaded["stats"], loaded["progression"]
+    )
     assert hero.level >= start_level  # exact depends on xp_to_next formula
-    assert hero.stat_points >= loaded["progression"].get("stat_points_per_level", 2) * gained
+    assert (
+        hero.stat_points
+        >= loaded["progression"].get("stat_points_per_level", 2) * gained
+    )
     # HP/Mana should have been recomputed per progression flags
     assert hero.hp != start_hp or hero.mana != start_mana
 

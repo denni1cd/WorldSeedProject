@@ -17,8 +17,12 @@ def test_save_load_includes_race_and_appearance(tmp_path: Path):
     root = Path(__file__).parents[1] / "character_creation" / "data"
     stat_tmpl = stats_loader.load_stat_template(root / "stats" / "stats.yaml")
     slot_tmpl = slots_loader.load_slot_template(root / "slots.yaml")
-    fields = appearance_loader.load_appearance_fields(root / "appearance" / "fields.yaml")
-    defaults = appearance_loader.load_appearance_defaults(root / "appearance" / "defaults.yaml")
+    fields = appearance_loader.load_appearance_fields(
+        root / "appearance" / "fields.yaml"
+    )
+    defaults = appearance_loader.load_appearance_defaults(
+        root / "appearance" / "defaults.yaml"
+    )
     resources = resources_loader.load_resources(root / "resources.yaml")
     progression = progression_loader.load_progression(root / "progression.yaml")
     formulas = yaml.safe_load(open(root / "formulas.yaml", "r", encoding="utf-8"))

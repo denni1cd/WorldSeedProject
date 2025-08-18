@@ -31,7 +31,9 @@ def slot_tmpl(data_path: Path):
 
 @pytest.fixture(scope="module")
 def appearance_fields(data_path: Path):
-    return yaml_utils.load_yaml(data_path / "appearance" / "fields.yaml").get("fields", {})
+    return yaml_utils.load_yaml(data_path / "appearance" / "fields.yaml").get(
+        "fields", {}
+    )
 
 
 @pytest.fixture(scope="module")

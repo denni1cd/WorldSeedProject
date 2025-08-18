@@ -94,7 +94,11 @@ def load_pack_dir(pack_dir: Path) -> Dict[str, Any]:
             if isinstance(items_block, dict):
                 # If values look like items (dicts with id), flatten
                 vals = list(items_block.values())
-                if vals and isinstance(vals[0], dict) and ("id" in vals[0] or "name" in vals[0]):
+                if (
+                    vals
+                    and isinstance(vals[0], dict)
+                    and ("id" in vals[0] or "name" in vals[0])
+                ):
                     result["items"] = vals
     elif isinstance(data, list):
         result["items"] = list(data)
@@ -165,7 +169,9 @@ def _merge_traits(
     return base
 
 
-def _union_preserve_order(base_vals: List[Any] | None, new_vals: List[Any] | None) -> List[Any]:
+def _union_preserve_order(
+    base_vals: List[Any] | None, new_vals: List[Any] | None
+) -> List[Any]:
     result: List[Any] = []
     seen: set[Any] = set()
     for arr in (base_vals or [], new_vals or []):
@@ -189,13 +195,17 @@ def merge_catalogs(
     # classes/races/items are lists of dicts with id
     for key in ("classes", "races", "items"):
         if key in base or key in pack:
-            result[key] = _merge_indexed_lists(base.get(key), pack.get(key), on_conflict)
+            result[key] = _merge_indexed_lists(
+                base.get(key), pack.get(key), on_conflict
+            )
 
     # traits is a mapping of id -> meta; may be nested under 'traits'
     base_traits = base.get("traits")
     pack_traits = pack.get("traits")
     if base_traits is not None or pack_traits is not None:
-        result["traits"] = _merge_traits(base_traits or {}, pack_traits or {}, on_conflict)
+        result["traits"] = _merge_traits(
+            base_traits or {}, pack_traits or {}, on_conflict
+        )
 
     # appearance_tables: dict name -> list of scalars; union lists
     base_tables = base.get("appearance_tables") or {}
@@ -211,7 +221,9 @@ def merge_catalogs(
     return result
 
 
-def load_and_merge_enabled_packs(base_root: Path, packs_cfg: Dict[str, Any]) -> Dict[str, Any]:
+def load_and_merge_enabled_packs(
+    base_root: Path, packs_cfg: Dict[str, Any]
+) -> Dict[str, Any]:
     """
     For each pack in cfg["enabled"], load its directory under base_root/content_packs/<name>,
     and merge into an accumulator according to cfg["merge"]["on_conflict"].

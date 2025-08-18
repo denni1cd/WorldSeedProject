@@ -72,13 +72,17 @@ def render_event(
         tpl_list = tpl_entry
 
     template = (
-        weight_choice(tpl_list) if tpl_list else "{actor} hits {target} for {amount} {dtype}."
+        weight_choice(tpl_list)
+        if tpl_list
+        else "{actor} hits {target} for {amount} {dtype}."
     )
 
     tokens = {
         "actor": actor,
         "target": target,
-        "amount": (int(amount) if abs(amount - round(amount)) < 1e-6 else f"{amount:.1f}"),
+        "amount": (
+            int(amount) if abs(amount - round(amount)) < 1e-6 else f"{amount:.1f}"
+        ),
         "dtype": dtype,
         "body_part": body_part,
         "verb_slash": choice(verbs.get("slash", [])),

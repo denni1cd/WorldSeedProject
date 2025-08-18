@@ -13,13 +13,20 @@ from character_creation.loaders import (
 from character_creation.ui.textual import state
 
 
-DATA_ROOT = Path(__file__).parents[2] / "character_creation_package" / "character_creation" / "data"
+DATA_ROOT = (
+    Path(__file__).parents[2]
+    / "character_creation_package"
+    / "character_creation"
+    / "data"
+)
 
 
 @pytest.fixture(scope="module")
 def loaded_data():
     return {
-        "stat_tmpl": stats_loader.load_stat_template(DATA_ROOT / "stats" / "stats.yaml"),
+        "stat_tmpl": stats_loader.load_stat_template(
+            DATA_ROOT / "stats" / "stats.yaml"
+        ),
         "class_catalog": classes_loader.load_class_catalog(DATA_ROOT / "classes.yaml"),
         "trait_catalog": traits_loader.load_trait_catalog(DATA_ROOT / "traits.yaml"),
         "race_catalog": races_loader.load_race_catalog(DATA_ROOT / "races.yaml"),
@@ -51,7 +58,9 @@ def test_build_and_summarize_character(loaded_data):
     traits = state.list_traits(loaded_data["trait_catalog"])
     first_trait_id = traits[0][0]
 
-    sel = state.CreationSelections(name="TuiHero", class_index=0, trait_ids=[first_trait_id])
+    sel = state.CreationSelections(
+        name="TuiHero", class_index=0, trait_ids=[first_trait_id]
+    )
     hero = state.build_character_from_selections(
         sel,
         loaded_data["stat_tmpl"],
@@ -70,18 +79,26 @@ def test_build_and_summarize_character(loaded_data):
     assert first_trait_id in getattr(hero, "traits", [])
 
     # Equipment initialized for all slots
-    slot_keys = list(loaded_data["slot_tmpl"].get("slots", loaded_data["slot_tmpl"]).keys())
+    slot_keys = list(
+        loaded_data["slot_tmpl"].get("slots", loaded_data["slot_tmpl"]).keys()
+    )
     for key in slot_keys:
         assert key in hero.equipment
 
     # Appearance keys match field spec
-    field_spec = loaded_data["appearance_fields"].get("fields", loaded_data["appearance_fields"])
+    field_spec = loaded_data["appearance_fields"].get(
+        "fields", loaded_data["appearance_fields"]
+    )
     assert set(hero.appearance.keys()) == set(field_spec.keys())
 
     # Summary
     starters = state.list_starter_classes(loaded_data["class_catalog"])
     summary = state.summarize_character(
-        hero, starters, sel.class_index, loaded_data["trait_catalog"], loaded_data["race_catalog"]
+        hero,
+        starters,
+        sel.class_index,
+        loaded_data["trait_catalog"],
+        loaded_data["race_catalog"],
     )
     for k in ["name", "class_label", "traits_labels", "hp", "mana", "core_stats"]:
         assert k in summary

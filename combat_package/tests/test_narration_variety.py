@@ -36,7 +36,18 @@ def test_variety_in_physical_lines():
     rng = RandomSource(seed=42)
     uniq = set()
     # synthesize 30 different contexts with varying parts/verbs
-    parts = ["arm", "shoulder", "chest", "ribs", "gut", "thigh", "knee", "shin", "foot", "head"]
+    parts = [
+        "arm",
+        "shoulder",
+        "chest",
+        "ribs",
+        "gut",
+        "thigh",
+        "knee",
+        "shin",
+        "foot",
+        "head",
+    ]
     for i in range(50):
         ctx = {
             "actor": "A",
@@ -48,7 +59,13 @@ def test_variety_in_physical_lines():
             "body_part": rng.choice(parts),
         }
         s = render_event(ctx, NARR, rng)
-        if "slashes" in s or "cleaves" in s or "carves" in s or "hews" in s or "rends" in s:
+        if (
+            "slashes" in s
+            or "cleaves" in s
+            or "carves" in s
+            or "hews" in s
+            or "rends" in s
+        ):
             uniq.add(s)
         if len(uniq) >= 6:
             break

@@ -100,9 +100,13 @@ def main() -> int:
                 "races": races.get("races", races),
             }
             merged_all = merge_catalogs(
-                base, overlay, on_conflict=(cfg.get("merge") or {}).get("on_conflict", "skip")
+                base,
+                overlay,
+                on_conflict=(cfg.get("merge") or {}).get("on_conflict", "skip"),
             )
-            from character_creation.services.validate_data import validate_merged_catalogs
+            from character_creation.services.validate_data import (
+                validate_merged_catalogs,
+            )
 
             validate_merged_catalogs(merged_all)
         print("OK")

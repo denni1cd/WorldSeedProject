@@ -101,7 +101,9 @@ def test_appearance_fields_have_type_and_default(appearance_fields):
     "field,props",
     [
         (field, props)
-        for field, props in load_appearance_fields(APPEARANCE_DIR / "fields.yaml")["fields"].items()
+        for field, props in load_appearance_fields(APPEARANCE_DIR / "fields.yaml")[
+            "fields"
+        ].items()
         if props.get("type") == "enum"
     ],
 )
@@ -121,7 +123,9 @@ def test_enum_table_exists_and_includes_default(field, props):
     "field,props",
     [
         (field, props)
-        for field, props in load_appearance_fields(APPEARANCE_DIR / "fields.yaml")["fields"].items()
+        for field, props in load_appearance_fields(APPEARANCE_DIR / "fields.yaml")[
+            "fields"
+        ].items()
         if props.get("type") == "float" and ("range" in props or "range_ref" in props)
     ],
 )
