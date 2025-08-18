@@ -1,2 +1,12 @@
-groups: {}
-weights: {}
+groups:
+  humanoid: [head, shoulder, arm, hand, chest, ribs, gut, back, thigh, knee, shin, foot]
+weights:
+  humanoid:
+    head: 0.08
+    chest: 0.22
+    ribs: 0.12
+    arm: 0.14
+    shoulder: 0.10
+    gut: 0.10
+    leg: 0.14
+    knee: 0.10

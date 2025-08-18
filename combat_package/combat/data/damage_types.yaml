@@ -1,1 +1,3 @@
-damage_types: []
+damage_types:
+  - { id: slashing, label: "Slashing", tags: [physical] }
+  - { id: fire,     label: "Fire",     tags: [elemental, burn] }

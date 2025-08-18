@@ -1,1 +1,8 @@
-abilities: []
+abilities:
+  - id: basic_attack
+    name: "Basic Attack"
+    formula: "ATT + WPN - ARM*0.6"
+    damage_type: slashing
+    crit:
+      chance: "0.05 + DEX*0.002"   # ~5% + DEX scaled
+      multiplier: 1.5

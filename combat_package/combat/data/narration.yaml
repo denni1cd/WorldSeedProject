@@ -1,4 +1,17 @@
-templates: {}
-verbs: {}
-adjectives: {}
-miss: []
+verbs:
+  slash: [slashes, cleaves, carves, hews, rends]
+adjectives:
+  fire: [scorching, blazing, searing, licking]
+miss:
+  - "{actor} lunges, but {target} slips aside."
+  - "{actor}'s swing whistles past {target}."
+templates:
+  physical_hit:
+    weight: 3
+    text: "{actor} {verb_slash} {target}'s {body_part} for {amount} {dtype}."
+  physical_crit:
+    weight: 2
+    text: "Critical! {actor}'s blade bites deep—{amount} {dtype} to {target}'s {body_part}."
+  fire_hit:
+    weight: 3
+    text: "{target} takes {amount} {adj_fire} damage as flames lick their {body_part}."
