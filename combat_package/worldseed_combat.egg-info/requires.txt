@@ -1,0 +1,9 @@
+PyYAML>=6.0
+
+[dev]
+pytest
+pytest-cov
+black
+ruff
+mypy
+pre-commit
