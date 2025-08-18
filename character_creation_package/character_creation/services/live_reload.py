@@ -52,19 +52,47 @@ class CatalogReloader:
 
     def _load_base(self) -> Dict[str, Any]:
         dr = self.data_root
-        stats = stats_loader.load_stat_template(dr / "stats" / "stats.yaml")
-        slots = slots_loader.load_slot_template(dr / "slots.yaml")
-        fields = appearance_loader.load_appearance_fields(dr / "appearance" / "fields.yaml")
-        defaults = appearance_loader.load_appearance_defaults(dr / "appearance" / "defaults.yaml")
-        resources = resources_loader.load_resources(dr / "resources.yaml")
-        classes = classes_loader.load_class_catalog(dr / "classes.yaml")
-        traits = traits_loader.load_trait_catalog(dr / "traits.yaml")
-        items = items_loader.load_item_catalog(dr / "items.yaml")
-        races = races_loader.load_race_catalog(dr / "races.yaml")
-        progression = progression_loader.load_progression(dr / "progression.yaml")
-        with open(dr / "formulas.yaml", "r", encoding="utf-8") as f:
+        char_dir = dr / "character"
+        backend_dir = dr / "backend"
+
+        def pick(*candidates):
+            for p in candidates:
+                try:
+                    if p.exists():
+                        return p
+                except Exception:
+                    continue
+            return candidates[-1]
+
+        stats_path = pick(char_dir / "stats" / "stats.yaml", dr / "stats" / "stats.yaml")
+        slots_path = pick(char_dir / "slots.yaml", dr / "slots.yaml")
+        fields_path = pick(
+            char_dir / "appearance" / "fields.yaml", dr / "appearance" / "fields.yaml"
+        )
+        defaults_path = pick(
+            char_dir / "appearance" / "defaults.yaml", dr / "appearance" / "defaults.yaml"
+        )
+        resources_path = pick(backend_dir / "resources.yaml", dr / "resources.yaml")
+        classes_path = pick(char_dir / "classes.yaml", dr / "classes.yaml")
+        traits_path = pick(char_dir / "traits.yaml", dr / "traits.yaml")
+        items_path = pick(char_dir / "items.yaml", dr / "items.yaml")
+        races_path = pick(char_dir / "races.yaml", dr / "races.yaml")
+        progression_path = pick(backend_dir / "progression.yaml", dr / "progression.yaml")
+        formulas_path = pick(backend_dir / "formulas.yaml", dr / "formulas.yaml")
+        limits_path = pick(char_dir / "creation_limits.yaml", dr / "creation_limits.yaml")
+
+        stats = stats_loader.load_stat_template(stats_path)
+        slots = slots_loader.load_slot_template(slots_path)
+        fields = appearance_loader.load_appearance_fields(fields_path)
+        defaults = appearance_loader.load_appearance_defaults(defaults_path)
+        resources = resources_loader.load_resources(resources_path)
+        classes = classes_loader.load_class_catalog(classes_path)
+        traits = traits_loader.load_trait_catalog(traits_path)
+        items = items_loader.load_item_catalog(items_path)
+        races = races_loader.load_race_catalog(races_path)
+        progression = progression_loader.load_progression(progression_path)
+        with open(formulas_path, "r", encoding="utf-8") as f:
             formulas = yaml.safe_load(f)
-        limits_path = dr / "creation_limits.yaml"
         if limits_path.exists():
             with open(limits_path, "r", encoding="utf-8") as f:
                 creation_limits = yaml.safe_load(f) or {}
@@ -72,7 +100,7 @@ class CatalogReloader:
             creation_limits = {}
 
         # Optional content packs
-        packs_cfg_path = dr / "content_packs.yaml"
+        packs_cfg_path = pick(char_dir / "content_packs.yaml", dr / "content_packs.yaml")
         if packs_cfg_path.exists():
             with open(packs_cfg_path, "r", encoding="utf-8") as f:
                 packs_cfg = yaml.safe_load(f) or {"enabled": [], "merge": {"on_conflict": "skip"}}
@@ -138,7 +166,7 @@ class CatalogReloader:
 
         # Appearance tables union (base + packs)
         appearance_tables: Dict[str, Any] = {}
-        tables_dir = dr / "appearance" / "tables"
+        tables_dir = pick(char_dir / "appearance" / "tables", dr / "appearance" / "tables")
         if tables_dir.exists():
             for p in tables_dir.glob("*.yaml"):
                 with open(p, "r", encoding="utf-8") as f:

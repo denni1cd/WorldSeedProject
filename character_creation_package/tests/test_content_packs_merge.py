@@ -14,16 +14,32 @@ from character_creation.services.validate_data import validate_merged_catalogs
 
 
 DATA_ROOT = Path(__file__).parents[2] / "character_creation_package" / "character_creation" / "data"
+CHAR = DATA_ROOT / "character"
 
 
 def test_content_packs_merge_and_validate():
     # Load base catalogs
-    base_classes = classes_loader.load_class_catalog(DATA_ROOT / "classes.yaml")
-    base_traits = traits_loader.load_trait_catalog(DATA_ROOT / "traits.yaml")
-    base_races = races_loader.load_race_catalog(DATA_ROOT / "races.yaml")
+    def pick(*candidates: Path) -> Path:
+        for p in candidates:
+            try:
+                if p.exists():
+                    return p
+            except Exception:
+                continue
+        return candidates[-1]
+
+    base_classes = classes_loader.load_class_catalog(
+        pick(CHAR / "classes.yaml", DATA_ROOT / "classes.yaml")
+    )
+    base_traits = traits_loader.load_trait_catalog(
+        pick(CHAR / "traits.yaml", DATA_ROOT / "traits.yaml")
+    )
+    base_races = races_loader.load_race_catalog(pick(CHAR / "races.yaml", DATA_ROOT / "races.yaml"))
 
     # Load packs config and merged overlay
-    packs_cfg = load_packs_config(DATA_ROOT / "content_packs.yaml")
+    packs_cfg = load_packs_config(
+        pick(CHAR / "content_packs.yaml", DATA_ROOT / "content_packs.yaml")
+    )
     merged_overlay = load_and_merge_enabled_packs(DATA_ROOT, packs_cfg)
 
     # Merge overlay into base copies

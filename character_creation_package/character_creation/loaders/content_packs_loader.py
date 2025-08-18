@@ -223,9 +223,18 @@ def load_and_merge_enabled_packs(base_root: Path, packs_cfg: Dict[str, Any]) -> 
         on_conflict = "skip"
 
     acc: Dict[str, Any] = {}
-    content_dir = base_root / "content_packs"
+    # Prefer character/content_packs, then backend/content_packs, else legacy content_packs at root
+    char_content_dir = base_root / "character" / "content_packs"
+    back_content_dir = base_root / "backend" / "content_packs"
+    legacy_content_dir = base_root / "content_packs"
+    if char_content_dir.exists():
+        search_dir = char_content_dir
+    elif back_content_dir.exists():
+        search_dir = back_content_dir
+    else:
+        search_dir = legacy_content_dir
     for name in enabled:
-        pack_dir = content_dir / name
+        pack_dir = search_dir / name
         pack_data = load_pack_dir(pack_dir)
         # Merge pack_data into acc using merge_catalogs, with acc as base and pack as overlay
         acc = merge_catalogs(acc, pack_data, on_conflict)

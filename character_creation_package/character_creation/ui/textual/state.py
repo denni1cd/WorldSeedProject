@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Any, List, Tuple
+from typing import Any, Dict, List, Tuple
 
+from ...models.character import Character
 from ...models.factory import create_new_character
 
 
@@ -11,147 +12,140 @@ class CreationSelections:
     name: str
     class_index: int
     trait_ids: List[str]
-    race_index: int | None = None
+    race_index: int = 0
+
+
+def _unwrap_list(wrapper_key: str, obj: Any) -> List[Dict[str, Any]]:
+    if isinstance(obj, dict) and wrapper_key in obj:
+        vals = obj[wrapper_key]
+        return list(vals) if isinstance(vals, list) else []
+    if isinstance(obj, list):
+        return list(obj)
+    return []
+
+
+def _unwrap_map(wrapper_key: str, obj: Any) -> Dict[str, Any]:
+    if isinstance(obj, dict) and wrapper_key in obj:
+        vals = obj[wrapper_key]
+        return dict(vals) if isinstance(vals, dict) else {}
+    if isinstance(obj, dict):
+        return dict(obj)
+    return {}
 
 
 def list_starter_classes(class_catalog: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Return classes with no prereq, preserving order."""
-
-    classes: List[Dict[str, Any]] = list(class_catalog.get("classes", []))
-    return [cls for cls in classes if not cls.get("prereq")]
+    classes = _unwrap_list("classes", class_catalog)
+    return [c for c in classes if not c.get("prereq")]
 
 
 def list_traits(trait_catalog: Dict[str, Any]) -> List[Tuple[str, Dict[str, Any]]]:
-    """Return list of (id, meta) sorted by id."""
-
-    traits: Dict[str, Dict[str, Any]] = trait_catalog.get("traits", {})
+    traits = _unwrap_map("traits", trait_catalog)
     return sorted(traits.items(), key=lambda kv: kv[0])
 
 
 def list_races(race_catalog: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Return race dicts in the order they appear."""
-    races = race_catalog.get("races", [])
-    if isinstance(races, list):
-        return list(races)
-    return []
+    return _unwrap_list("races", race_catalog)
 
 
-def build_character_from_selections(
-    sel: CreationSelections,
-    stat_tmpl: Dict[str, Any],
-    slot_tmpl: Dict[str, Any],
-    appearance_fields: Dict[str, Any],
-    appearance_defaults: Dict[str, Any],
+def create_new_character_state(
+    name: str,
+    stat_tmpl: Dict[str, dict],
+    slot_tmpl: Dict[str, dict],
+    appearance_fields: Dict[str, dict],
+    appearance_defaults: Dict[str, Any] | None,
     resources: Dict[str, Any],
-    class_catalog: Dict[str, Any],
-    trait_catalog: Dict[str, Any],
-    race_catalog: Dict[str, Any] | None = None,
-) -> Any:
-    """
-    - Create base hero via create_new_character
-    - Apply chosen class (use starter list index)
-    - Apply selected trait ids
-    - Return hero
-    """
-
-    # Normalize possible nested schemas
-    fields_spec = appearance_fields.get("fields", appearance_fields)
-    hero = create_new_character(
-        sel.name,
+) -> Character:
+    return create_new_character(
+        name,
         stat_tmpl,
         slot_tmpl,
-        fields_spec,
+        appearance_fields,
         appearance_defaults,
         resources,
     )
 
-    # Apply race if selected
-    if race_catalog and sel.race_index is not None:
-        races = list_races(race_catalog)
-        if 0 <= sel.race_index < len(races):
-            race_def = races[sel.race_index]
-            rid = race_def.get("id")
-            if rid:
-                hero.set_race(rid, race_catalog)
+
+def apply_appearance_selection(hero: Character, selection: Dict[str, Any]) -> None:
+    if not selection:
+        return
+    hero.appearance.update(selection)
+
+
+def build_character_from_selections(
+    sel: CreationSelections,
+    stat_tmpl: Dict[str, dict],
+    slot_tmpl: Dict[str, dict],
+    appearance_fields: Dict[str, dict],
+    appearance_defaults: Dict[str, Any],
+    resources: Dict[str, Any],
+    class_catalog: Dict[str, Any],
+    trait_catalog: Dict[str, Any],
+    race_catalog: Dict[str, Any],
+) -> Character:
+    # Unwrap fields if wrapped under 'fields'
+    fields_spec = appearance_fields.get("fields", appearance_fields)
+    hero = create_new_character_state(
+        sel.name, stat_tmpl, slot_tmpl, fields_spec, appearance_defaults, resources
+    )
 
     starters = list_starter_classes(class_catalog)
-    if not (0 <= sel.class_index < len(starters)):
-        raise IndexError("class_index out of range for starter classes")
-    chosen_class_def = starters[sel.class_index]
-    hero.add_class(chosen_class_def)
+    if starters:
+        idx = max(0, min(sel.class_index, len(starters) - 1))
+        hero.classes = [starters[idx].get("id")]
 
-    # Validate trait ids against catalog and apply
-    valid_trait_ids = [tid for tid in sel.trait_ids if tid in trait_catalog.get("traits", {})]
-    hero.add_traits(valid_trait_ids, trait_catalog)
+    all_traits = _unwrap_map("traits", trait_catalog)
+    hero.traits = [tid for tid in sel.trait_ids if tid in all_traits]
+
+    races = list_races(race_catalog)
+    if races:
+        ridx = max(0, min(getattr(sel, "race_index", 0), len(races) - 1))
+        hero.race = races[ridx].get("id")
+
+    # Populate appearance with defaults if available
+    fields = fields_spec
+    for fid, meta in fields.items():
+        if fid not in hero.appearance:
+            if appearance_defaults and fid in appearance_defaults:
+                hero.appearance[fid] = appearance_defaults[fid]
+            elif "default" in meta:
+                hero.appearance[fid] = meta["default"]
 
     return hero
 
 
 def summarize_character(
-    hero: Any,
-    starter_classes: List[Dict[str, Any]],
-    chosen_index: int,
+    hero: Character,
+    starters: List[Dict[str, Any]],
+    class_index: int,
     trait_catalog: Dict[str, Any],
-    race_catalog: Dict[str, Any] | None = None,
+    race_catalog: Dict[str, Any],
 ) -> Dict[str, Any]:
-    """
-    Return dict with keys: name, class_label, traits_labels, hp, mana, core_stats (dict).
-    Use 'name' field on class/trait if present, else the id.
-    """
-
     class_label = None
-    if 0 <= chosen_index < len(starter_classes):
-        class_def = starter_classes[chosen_index]
-        class_label = class_def.get("name") or class_def.get("id")
+    if starters:
+        idx = max(0, min(class_index, len(starters) - 1))
+        class_label = starters[idx].get("name") or starters[idx].get("id")
 
-    trait_meta = trait_catalog.get("traits", {})
-    traits_labels: List[str] = []
-    for tid in getattr(hero, "traits", []) or []:
-        meta = trait_meta.get(tid, {})
-        traits_labels.append(meta.get("name") or tid)
+    traits_map = _unwrap_map("traits", trait_catalog)
+    trait_labels = []
+    for tid in hero.traits:
+        meta = traits_map.get(tid, {})
+        trait_labels.append(meta.get("name", tid))
 
-    # Race label
     race_label = None
-    if race_catalog and getattr(hero, "race", None):
-        for r in race_catalog.get("races", []) or []:
-            if isinstance(r, dict) and r.get("id") == hero.race:
-                race_label = r.get("name") or r.get("id")
-                break
+    for r in list_races(race_catalog):
+        if r.get("id") == hero.race:
+            race_label = r.get("name", r.get("id"))
+            break
 
-    # Appearance peek: include common keys if present
-    peek_keys = [
-        "eye_color",
-        "hair_color",
-        "height_cm",
-        "weight_kg",
-    ]
-    appearance_peek = {}
-    try:
-        for k in peek_keys:
-            if k in getattr(hero, "appearance", {}):
-                appearance_peek[k] = hero.appearance.get(k)
-    except Exception:
-        appearance_peek = {}
+    core_stats = {k: v for k, v in hero.stats.items() if isinstance(v, (int, float))}
 
     return {
-        "name": getattr(hero, "name", None),
-        "race_label": race_label,
-        "class_label": class_label,
-        "traits_labels": traits_labels,
-        "level": getattr(hero, "level", None),
-        "stat_points": getattr(hero, "stat_points", None),
-        "hp": getattr(hero, "hp", None),
-        "mana": getattr(hero, "mana", None),
-        "core_stats": getattr(hero, "stats", {}),
-        "appearance_peek": appearance_peek,
+        "name": hero.name,
+        "class_label": class_label or "",
+        "traits_labels": trait_labels,
+        "hp": hero.hp,
+        "mana": hero.mana,
+        "core_stats": core_stats,
+        "race_label": race_label or "",
+        "appearance_peek": {k: hero.appearance.get(k) for k in list(hero.appearance.keys())[:5]},
     }
-
-
-def apply_appearance_selection(hero, selection: Dict[str, Any]) -> None:
-    """hero.appearance.update(selection)"""
-    try:
-        if not isinstance(selection, dict):
-            return
-        hero.appearance.update(selection)
-    except Exception:
-        return

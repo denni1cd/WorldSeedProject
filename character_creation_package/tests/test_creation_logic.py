@@ -7,21 +7,36 @@ import builtins
 
 # Paths relative to test file location
 DATA_ROOT = Path(__file__).parents[2] / "character_creation_package" / "character_creation" / "data"
+CHAR = DATA_ROOT / "character"
+
+
+def pick(*candidates: Path) -> Path:
+    for p in candidates:
+        try:
+            if p.exists():
+                return p
+        except Exception:
+            continue
+    return candidates[-1]
 
 
 @pytest.fixture
 def stat_tmpl():
-    return stats_loader.load_stat_template(DATA_ROOT / "stats" / "stats.yaml")
+    return stats_loader.load_stat_template(
+        pick(CHAR / "stats" / "stats.yaml", DATA_ROOT / "stats" / "stats.yaml")
+    )
 
 
 @pytest.fixture
 def class_catalog():
-    return classes_loader.load_class_catalog(DATA_ROOT / "classes.yaml")
+    return classes_loader.load_class_catalog(
+        pick(CHAR / "classes.yaml", DATA_ROOT / "classes.yaml")
+    )
 
 
 @pytest.fixture
 def trait_catalog():
-    return traits_loader.load_trait_catalog(DATA_ROOT / "traits.yaml")
+    return traits_loader.load_trait_catalog(pick(CHAR / "traits.yaml", DATA_ROOT / "traits.yaml"))
 
 
 def test_available_starting_classes(stat_tmpl, class_catalog):

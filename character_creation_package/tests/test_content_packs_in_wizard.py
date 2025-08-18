@@ -19,25 +19,47 @@ from character_creation.ui.cli.wizard import run_wizard
 
 
 DATA_ROOT = Path(__file__).parents[2] / "character_creation_package" / "character_creation" / "data"
+CHAR = DATA_ROOT / "character"
+BACK = DATA_ROOT / "backend"
+
+
+def pick(*candidates: Path) -> Path:
+    for p in candidates:
+        try:
+            if p.exists():
+                return p
+        except Exception:
+            continue
+    return candidates[-1]
 
 
 def test_wizard_can_select_pack_race_and_class(monkeypatch, tmp_path):
     # Base
-    stat_tmpl = stats_loader.load_stat_template(DATA_ROOT / "stats" / "stats.yaml")
-    slot_tmpl = slots_loader.load_slot_template(DATA_ROOT / "slots.yaml")
+    stat_tmpl = stats_loader.load_stat_template(
+        pick(CHAR / "stats" / "stats.yaml", DATA_ROOT / "stats" / "stats.yaml")
+    )
+    slot_tmpl = slots_loader.load_slot_template(pick(BACK / "slots.yaml", DATA_ROOT / "slots.yaml"))
     appearance_fields = appearance_loader.load_appearance_fields(
-        DATA_ROOT / "appearance" / "fields.yaml"
+        pick(CHAR / "appearance" / "fields.yaml", DATA_ROOT / "appearance" / "fields.yaml")
     )
     appearance_defaults = appearance_loader.load_appearance_defaults(
-        DATA_ROOT / "appearance" / "defaults.yaml"
+        pick(CHAR / "appearance" / "defaults.yaml", DATA_ROOT / "appearance" / "defaults.yaml")
     )
-    resources = resources_loader.load_resources(DATA_ROOT / "resources.yaml")
-    base_classes = classes_loader.load_class_catalog(DATA_ROOT / "classes.yaml")
-    base_traits = traits_loader.load_trait_catalog(DATA_ROOT / "traits.yaml")
-    base_races = races_loader.load_race_catalog(DATA_ROOT / "races.yaml")
+    resources = resources_loader.load_resources(
+        pick(BACK / "resources.yaml", DATA_ROOT / "resources.yaml")
+    )
+    base_classes = classes_loader.load_class_catalog(
+        pick(CHAR / "classes.yaml", DATA_ROOT / "classes.yaml")
+    )
+    base_traits = traits_loader.load_trait_catalog(
+        pick(CHAR / "traits.yaml", DATA_ROOT / "traits.yaml")
+    )
+    base_races = races_loader.load_race_catalog(pick(CHAR / "races.yaml", DATA_ROOT / "races.yaml"))
 
     # Merge packs
-    packs_cfg = load_packs_config(DATA_ROOT / "content_packs.yaml")
+    packs_cfg = load_packs_config(
+        pick(CHAR / "content_packs.yaml", DATA_ROOT / "content_packs.yaml")
+    )
     merged_overlay = load_and_merge_enabled_packs(DATA_ROOT, packs_cfg)
     policy = packs_cfg.get("merge", {}).get("on_conflict", "skip")
     base = {

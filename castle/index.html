@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Epic Mountain Castle</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div id="ui">
+      <div id="hud">
+        <div id="scoreboard">Score: <span id="scoreValue">0</span></div>
+        <div id="instructions">
+          Click to fire. Pop balloons. Click a character to talk. Scroll/drag to explore.
+        </div>
+      </div>
+      <div id="dialoguePanel" class="hidden">
+        <div id="dialogueHeader">
+          Talking to: <span id="dialogueName">Unknown</span>
+          <button id="dialogueClose" title="Close">×</button>
+        </div>
+        <div id="dialogueLog"></div>
+        <div id="dialogueInputRow">
+          <input id="dialogueInput" type="text" placeholder="Say something..." />
+          <button id="dialogueSend">Send</button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+  </html>

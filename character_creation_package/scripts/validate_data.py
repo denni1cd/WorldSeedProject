@@ -34,25 +34,40 @@ from character_creation.loaders.content_packs_loader import (
 
 def main() -> int:
     root = Path(__file__).parents[1] / "character_creation" / "data"
+    char = root / "character"
+
+    def pick(*candidates: Path) -> Path:
+        for p in candidates:
+            try:
+                if p.exists():
+                    return p
+            except Exception:
+                continue
+        return candidates[-1]
+
     try:
         # Load core data
-        stats = stats_loader.load_stat_template(root / "stats" / "stats.yaml")
-        classes = classes_loader.load_class_catalog(root / "classes.yaml")
-        traits = traits_loader.load_trait_catalog(root / "traits.yaml")
-        slots = slots_loader.load_slot_template(root / "slots.yaml")
+        stats = stats_loader.load_stat_template(
+            pick(char / "stats" / "stats.yaml", root / "stats" / "stats.yaml")
+        )
+        classes = classes_loader.load_class_catalog(
+            pick(char / "classes.yaml", root / "classes.yaml")
+        )
+        traits = traits_loader.load_trait_catalog(pick(char / "traits.yaml", root / "traits.yaml"))
+        slots = slots_loader.load_slot_template(pick(char / "slots.yaml", root / "slots.yaml"))
         items = (
-            items_loader.load_item_catalog(root / "items.yaml")
-            if (root / "items.yaml").exists()
+            items_loader.load_item_catalog(pick(char / "items.yaml", root / "items.yaml"))
+            if pick(char / "items.yaml", root / "items.yaml").exists()
             else {}
         )
-        races = races_loader.load_race_catalog(root / "races.yaml")
+        races = races_loader.load_race_catalog(pick(char / "races.yaml", root / "races.yaml"))
         appearance_fields = appearance_loader.load_appearance_fields(
-            root / "appearance" / "fields.yaml"
+            pick(char / "appearance" / "fields.yaml", root / "appearance" / "fields.yaml")
         )
         # defaults/resources are optional for validation and not required here
         # One table and one range, if available
-        tables_dir = root / "appearance" / "tables"
-        ranges_dir = root / "appearance" / "ranges"
+        tables_dir = pick(char / "appearance" / "tables", root / "appearance" / "tables")
+        ranges_dir = pick(char / "appearance" / "ranges", root / "appearance" / "ranges")
         any_table = None
         any_table_name = None
         if tables_dir.exists():
@@ -68,7 +83,7 @@ def main() -> int:
                 any_range_name = p.name
                 break
         # Creation limits
-        limits_path = root / "creation_limits.yaml"
+        limits_path = pick(char / "creation_limits.yaml", root / "creation_limits.yaml")
         limits = {}
         if limits_path.exists():
             from character_creation.loaders.yaml_utils import load_yaml
@@ -91,7 +106,7 @@ def main() -> int:
         if limits:
             validate_creation_limits(limits)
         # Validate merged content packs overlay (if any)
-        cfg = load_packs_config(root / "content_packs.yaml")
+        cfg = load_packs_config(pick(char / "content_packs.yaml", root / "content_packs.yaml"))
         overlay = load_and_merge_enabled_packs(root, cfg)
         if overlay:
             base = {

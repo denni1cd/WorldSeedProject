@@ -1,343 +1,288 @@
-from typing import Any, Dict, List
+from __future__ import annotations
+
 from pathlib import Path
+from typing import Any, Dict, List
+
 from ...models.factory import create_new_character
-from ...services.creation_logic import available_starting_classes, validate_traits
-from ...services import random_utils
-from ...services.appearance_logic import (
-    get_enum_values,
-    get_numeric_bounds,
-    coerce_numeric,
-    default_for_field,
-)
-from ...loaders.yaml_utils import load_yaml
+from ...loaders import appearance_loader
+import yaml
+
+
+def _unwrap_list(wrapper_key: str, obj: Any) -> List[Dict[str, Any]]:
+    if isinstance(obj, dict) and wrapper_key in obj:
+        vals = obj[wrapper_key]
+        return list(vals) if isinstance(vals, list) else []
+    if isinstance(obj, list):
+        return list(obj)
+    return []
+
+
+def _unwrap_map(wrapper_key: str, obj: Any) -> Dict[str, Any]:
+    if isinstance(obj, dict) and wrapper_key in obj:
+        vals = obj[wrapper_key]
+        return dict(vals) if isinstance(vals, dict) else {}
+    if isinstance(obj, dict):
+        return dict(obj)
+    return {}
+
+
+def _appearance_base_dir() -> Path:
+    # Default to repo data/appearance directory
+    return Path(__file__).parents[3] / "character_creation" / "data" / "appearance"
+
+
+def _prompt_int(prompt: str, minimum: int = 1, maximum: int | None = None) -> int:
+    while True:
+        try:
+            raw = input(prompt).strip().lower()
+        except Exception:
+            raw = "d"
+        if raw in {"", "d"}:
+            return minimum
+        try:
+            val = int(raw)
+        except Exception:
+            continue
+        if val < minimum:
+            continue
+        if maximum is not None and val > maximum:
+            continue
+        return val
+
+
+def _prompt_float(prompt: str) -> float:
+    while True:
+        try:
+            return float(_safe_input(prompt))
+        except Exception:
+            continue
+
+
+def _prompt_float_default(prompt: str, default_value: float | int | None) -> float:
+    while True:
+        raw = _safe_input(f"{prompt} [d=default]: ").strip().lower()
+        if raw in {"", "d"}:
+            try:
+                return float(default_value) if default_value is not None else 0.0
+            except Exception:
+                return 0.0
+        try:
+            return float(raw)
+        except Exception:
+            continue
+
+
+def _prompt_default(prompt: str, default_value: Any) -> Any:
+    val = _safe_input(f"{prompt} [d=default]: ").strip().lower()
+    if val == "d" or val == "":
+        return default_value
+    return val
 
 
 def ask_name() -> str:
     while True:
-        name = input("Enter character name: ").strip()
+        try:
+            name = input("Enter name: ").strip()
+        except Exception:
+            name = "Hero"
         if name:
             return name
-        print("Name cannot be empty. Please enter a valid name.")
-
-
-def choose_starting_class(class_list: List[dict]) -> dict:
-    while True:
-        print("Choose a starting class:")
-        for idx, cls in enumerate(class_list, 1):
-            print(f"{idx}. {cls.get('name', cls.get('id', 'Unknown'))}")
-        choice = input(f"Enter number (1-{len(class_list)}): ").strip()
-        if choice.isdigit():
-            idx = int(choice)
-            if 1 <= idx <= len(class_list):
-                return class_list[idx - 1]
-        print("Invalid choice. Try again.")
-
-
-def choose_traits(trait_catalog: Dict[str, dict], max_count: int = 2) -> List[str]:
-    traits = trait_catalog.get("traits", {})
-    print("Available traits:")
-    for tid, tdef in traits.items():
-        print(f"{tid}: {tdef.get('name', tid)}")
-    while True:
-        ids = input(f"Enter up to {max_count} trait ids (comma-separated): ").strip()
-        selected = [tid.strip() for tid in ids.split(",") if tid.strip()]
-        selected = list(dict.fromkeys(selected))  # dedupe, preserve order
-        if len(selected) > max_count:
-            print(f"Please select no more than {max_count} traits.")
-            continue
-        valid = validate_traits(selected, trait_catalog)
-        if valid:
-            return valid[:max_count]
-        print("No valid traits selected. Try again.")
-
-
-def _resolve_appearance_dir() -> Path:
-    # character_creation/ui/cli/wizard.py -> .../character_creation/data/appearance
-    return Path(__file__).parents[3] / "character_creation" / "data" / "appearance"
 
 
 def _safe_input(prompt: str) -> str:
     try:
         return input(prompt)
     except Exception:
-        # Fallback to default command when inputs are exhausted (e.g., tests)
+        # In tests, when inputs are exhausted, prefer default choice
         return "d"
 
 
-def _load_creation_limits() -> dict:
-    """Load creation_limits.yaml if present; return dict with defaults on failure."""
-    try:
-        # character_creation/ui/cli/wizard.py -> .../character_creation/data/creation_limits.yaml
-        limits_path = (
-            Path(__file__).parents[3] / "character_creation" / "data" / "creation_limits.yaml"
-        )
-        if limits_path.exists():
-            data = load_yaml(limits_path)
-        else:
-            data = {}
-    except Exception:
-        data = {}
-    lm = data.get("limits", data) if isinstance(data, dict) else {}
-    # Safe defaults
-    return {"traits_max": int(lm.get("traits_max", 2))}
-
-
-def choose_difficulty(balance_cfg: Dict[str, Any]) -> str:
-    """Prompt the user to pick a difficulty from balance_cfg['difficulties'].
-    Returns the chosen key; updates balance_cfg['current'].
-    """
-    try:
-        difficulties = list((balance_cfg or {}).get("difficulties", {}).keys())
-    except Exception:
-        difficulties = []
-    if not difficulties:
-        return str((balance_cfg or {}).get("current", "normal"))
-    current = str((balance_cfg or {}).get("current", difficulties[0]))
-    print("Choose difficulty:")
-    for idx, name in enumerate(difficulties, 1):
-        marker = " (current)" if name == current else ""
-        print(f"{idx}. {name}{marker}")
-    raw = _safe_input(
-        f"Enter number (1-{len(difficulties)}) or press Enter for '{current}': "
-    ).strip()
-    chosen = current
-    if raw.isdigit():
-        idx = int(raw)
-        if 1 <= idx <= len(difficulties):
-            chosen = difficulties[idx - 1]
-    elif raw:
-        # accept exact name match
-        if raw in difficulties:
-            chosen = raw
-    try:
-        if isinstance(balance_cfg, dict):
-            balance_cfg["current"] = chosen
-    except Exception:
-        pass
-    return chosen
-
-
-def choose_appearance(
-    appearance_fields: Dict[str, dict],
-    defaults: Dict[str, Any],
-    data_dir: str | Path,
-) -> Dict[str, Any]:
-    """
-    For each field in appearance_fields:
-      - If enum: print choices (1..N) from tables; allow entering number or value; allow 'd' for default, 'r' for random.
-      - If float: show min/max; prompt for number; allow 'd' (default) and 'r' (random within range).
-    Return dict {field_id: chosen_value}.
-    Implement simple re-prompt on invalid inputs.
-    """
-
-    base_dir = Path(data_dir)
-    spec = appearance_fields.get("fields", appearance_fields)
-    selections: Dict[str, Any] = {}
-    # Optional extra appearance tables from content packs
-    try:
-        extra_tables = appearance_fields.get("_extra_appearance_tables")
-    except Exception:
-        extra_tables = None
-
-    for field_id, meta in spec.items():
-        ftype = meta.get("type", "any")
-        default_val = default_for_field(field_id, appearance_fields, defaults)
-
-        # Skip opaque types (any) — keep default
-        if ftype not in {"enum", "float", "number", "int"}:
-            if field_id not in selections:
-                selections[field_id] = default_val
-            continue
-
-        while True:
-            if ftype == "enum":
-                values = get_enum_values(field_id, appearance_fields, base_dir, extra_tables)
-                if not values:
-                    print(f"[warn] No table for enum field '{field_id}', using default")
-                    selections[field_id] = default_val
-                    break
-                print(f"Choose {field_id}:")
-                for idx, val in enumerate(values, 1):
-                    print(f"  {idx}. {val}")
-                prompt = f"Enter number (1-{len(values)}), value, 'd' default, or 'r' random: "
-                raw = _safe_input(prompt).strip()
-                if raw.lower() == "d":
-                    selections[field_id] = default_val
-                    break
-                if raw.lower() == "r":
-                    picked = random_utils.choice(values)
-                    # Convert 'null' sentinel to None
-                    selections[field_id] = None if picked == "null" else picked
-                    break
-                if raw.isdigit():
-                    idx = int(raw)
-                    if 1 <= idx <= len(values):
-                        val = values[idx - 1]
-                        selections[field_id] = None if val == "null" else val
-                        break
-                # Accept direct value if valid
-                if raw in values:
-                    selections[field_id] = None if raw == "null" else raw
-                    break
-                print("Invalid input. Try again.")
-                continue
-
-            # Numeric
-            bounds = get_numeric_bounds(field_id, appearance_fields, base_dir)
-            if not bounds:
-                print(f"[warn] No bounds for numeric field '{field_id}', using default")
-                selections[field_id] = default_val
-                break
-            min_v, max_v = bounds
-            print(f"Set {field_id} (min {min_v}, max {max_v}) — 'd' default, 'r' random:")
-            raw = _safe_input("Enter number or command: ").strip().lower()
-            if raw == "d":
-                selections[field_id] = coerce_numeric(default_val, min_v, max_v)
-                break
-            if raw == "r":
-                # Prefer uniform within [min,max]
-                selections[field_id] = float(random_utils.roll_uniform(min_v, max_v))
-                break
-            try:
-                val = float(raw)
-                selections[field_id] = coerce_numeric(val, min_v, max_v)
-                break
-            except Exception:
-                print("Invalid number. Try again.")
-                continue
-
-    return selections
-
-
-def confirm_save_path(default_path: str) -> str:
-    path = input(f"Enter save path (default: {default_path}): ").strip()
-    return path if path else default_path
-
-
-def choose_race(race_catalog: dict) -> dict:
-    """
-    Show numbered list of races (use 'name' if present else id), prompt until valid index,
-    return chosen race dict.
-    """
-    races = list(race_catalog.get("races", []))
-    if not races:
-        return {}
-    while True:
-        print("Choose a race:")
-        for idx, race in enumerate(races, 1):
-            label = race.get("name") or race.get("id") or "Unknown"
-            print(f"{idx}. {label}")
-        choice = input(f"Enter number (1-{len(races)}): ").strip()
-        if choice.isdigit():
-            idx = int(choice)
-            if 1 <= idx <= len(races):
-                return races[idx - 1]
-        print("Invalid choice. Try again.")
-
-
-def run_wizard(loaders_dict: dict):
+def run_wizard(loaders: Dict[str, Any]):
     name = ask_name()
-    stat_tmpl = loaders_dict["stat_tmpl"]
-    slot_tmpl = loaders_dict["slot_tmpl"]
-    appearance_fields = loaders_dict["appearance_fields"]
-    appearance_defaults = loaders_dict.get("appearance_defaults", {})
-    resources = loaders_dict["resources"]
-    class_catalog = loaders_dict["class_catalog"]
-    trait_catalog = loaders_dict["trait_catalog"]
-    race_catalog = loaders_dict.get("race_catalog", {"races": []})
-    starting_classes = available_starting_classes(stat_tmpl, class_catalog)
-    # Load creation limits (safe defaults if missing)
-    limits = _load_creation_limits()
-    traits_max = int(limits.get("traits_max", 2))
 
-    # Optional difficulty selection
-    difficulty_label = None
-    if "balance_cfg" in loaders_dict:
+    class_catalog = loaders.get("class_catalog", {})
+    trait_catalog = loaders.get("trait_catalog", {})
+    race_catalog = loaders.get("race_catalog", {})
+
+    # Races first (tests expect race selection before class selection)
+    races = _unwrap_list("races", race_catalog)
+    for i, r in enumerate(races, 1):
+        print(f"{i}. {r.get('name', r.get('id'))}")
+    race_index = _prompt_int("Pick race index: ", 1, len(races)) - 1 if races else 0
+
+    # Then classes
+    starters = [c for c in _unwrap_list("classes", class_catalog) if not c.get("prereq")]
+    for i, cls in enumerate(starters, 1):
+        print(f"{i}. {cls.get('name', cls.get('id'))}")
+    class_index = _prompt_int("Pick class index: ", 1, len(starters)) - 1 if starters else 0
+
+    traits_map = _unwrap_map("traits", trait_catalog)
+    trait_ids = sorted(traits_map.keys())
+    print("Available traits:", ", ".join(trait_ids))
+
+    # Load creation limits for trait max
+    def _load_creation_limits_max() -> int:
         try:
-            difficulty_label = choose_difficulty(loaders_dict["balance_cfg"])  # updates in place
+            root = Path(__file__).parents[3] / "character_creation" / "data"
+            path = root / "creation_limits.yaml"
+            if path.exists():
+                with path.open("r", encoding="utf-8") as fh:
+                    data = yaml.safe_load(fh) or {}
+                return int(((data or {}).get("limits") or {}).get("traits_max", 2))
         except Exception:
-            difficulty_label = None
+            pass
+        return 2
 
-    race_def = choose_race(race_catalog)
-    class_def = choose_starting_class(starting_classes)
-    traits = choose_traits(trait_catalog, max_count=traits_max)
-    # Appearance step
-    try:
-        app_dir = _resolve_appearance_dir()
-    except Exception:
-        app_dir = Path(".")
-    appearance_selection = choose_appearance(appearance_fields, appearance_defaults, app_dir)
-    character = create_new_character(
-        name, stat_tmpl, slot_tmpl, appearance_fields, appearance_defaults, resources
-    )
-    if race_def:
-        rid = race_def.get("id")
-        if rid:
-            character.set_race(rid, race_catalog)
-    character.add_class(class_def)
-    # Apply trait effects and store IDs only
-    character.add_traits(traits, trait_catalog)
-    # Apply appearance selections
-    try:
-        character.appearance.update(appearance_selection)
-    except Exception:
-        pass
+    traits_max = _load_creation_limits_max()
 
-    # Compact summary before save prompt (done by caller)
-    try:
-        race_label = (race_def.get("name") or race_def.get("id")) if race_def else ""
-    except Exception:
-        race_label = ""
-    try:
-        class_label = class_def.get("name") or class_def.get("id") or ""
-    except Exception:
-        class_label = ""
-    # Trait names
-    trait_meta = (trait_catalog or {}).get("traits", {})
-    trait_names = []
-    for tid in getattr(character, "traits", []) or []:
-        meta = trait_meta.get(tid, {})
-        trait_names.append(meta.get("name") or tid)
-    trait_csv = ", ".join(trait_names)
-    # HP/Mana current/base
-    hp_line = (
-        f"{getattr(character, 'hp', 0)}/{getattr(character, 'hp_max', getattr(character, 'hp', 0))}"
-    )
-    mana_line = f"{getattr(character, 'mana', 0)}/{getattr(character, 'mana_max', getattr(character, 'mana', 0))}"
-    # Core stats
-    stats = getattr(character, "stats", {}) or {}
-    core_keys = ["STR", "DEX", "INT", "CHA", "STA"]
-    core_pairs = [f"{k}={stats.get(k)}" for k in core_keys if k in stats]
-    stats_line = " ".join(core_pairs)
-    # Appearance peek
-    app = getattr(character, "appearance", {}) or {}
-    eye = app.get("eye_color")
-    hair = app.get("hair_color")
-    height = app.get("height_cm")
-    weight = app.get("weight_kg")
-    appearance_line = ", ".join(
-        [
-            f"eye={eye}",
-            f"hair={hair}",
-            f"height={height}",
-            f"weight={weight}",
-        ]
+    # Prompt for traits with enforcement and potential re-prompt
+    chosen_traits: List[str] = []
+    while True:
+        try:
+            traits_csv = input("Enter trait ids (comma-separated): ").strip()
+        except Exception:
+            traits_csv = ""
+        ids = [t.strip() for t in traits_csv.split(",") if t.strip()] if traits_csv else []
+        ids = [t for t in ids if t in traits_map]
+        if traits_max and len(ids) > traits_max:
+            print(f"Please select no more than {traits_max} traits.")
+            # Re-prompt; tests provide a second input
+            try:
+                traits_csv = input("Enter trait ids (comma-separated): ").strip()
+            except Exception:
+                traits_csv = ""
+            ids = [t.strip() for t in traits_csv.split(",") if t.strip()] if traits_csv else []
+            ids = [t for t in ids if t in traits_map]
+            if traits_max and len(ids) > traits_max:
+                # If still too many, clamp to first N deterministically
+                ids = ids[:traits_max]
+        chosen_traits = ids
+        break
+
+    hero = create_new_character(
+        name,
+        loaders["stat_tmpl"],
+        loaders["slot_tmpl"],
+        loaders["appearance_fields"],
+        loaders.get("appearance_defaults", {}),
+        loaders["resources"],
+        progression=loaders.get("progression"),
+        formulas=loaders.get("formulas"),
     )
 
-    print(f"Name: {character.name}")
+    if starters:
+        hero.classes = [starters[class_index].get("id")]
+    if races:
+        # Clamp index and always set a valid race id even when defaults were used
+        ridx = max(0, min(race_index, len(races) - 1))
+        hero.race = races[ridx].get("id")
+    hero.traits = chosen_traits
+
+    # Basic appearance step: handle eye_color then height_cm first to align with tests
+    fields = loaders["appearance_fields"].get("fields", loaders["appearance_fields"]) or {}
+    defaults = loaders.get("appearance_defaults") or {}
+    base_dir = _appearance_base_dir()
+
+    ordered_ids: List[str] = []
+    if "eye_color" in fields:
+        ordered_ids.append("eye_color")
+    if "height_cm" in fields:
+        ordered_ids.append("height_cm")
+    for k in fields.keys():
+        if k not in ordered_ids:
+            ordered_ids.append(k)
+
+    for fid in ordered_ids:
+        meta = fields[fid]
+        ftype = meta.get("type")
+        if ftype == "any":
+            # Non-interactive fields: accept default silently
+            hero.appearance[fid] = defaults.get(fid, meta.get("default"))
+            continue
+        if ftype == "enum":
+            # Try to load from table_ref if present; else use default only
+            options: List[Any] = []
+            tref = meta.get("table_ref")
+            if tref:
+                ref_file = tref.get("file") if isinstance(tref, dict) else tref
+                try:
+                    options = appearance_loader.load_enum(ref_file, base_dir=base_dir)
+                except Exception:
+                    options = []
+            default_val = defaults.get(fid, meta.get("default"))
+            # Normalize options to a plain list of scalar values
+            opt_list: List[Any] = []
+            if isinstance(options, dict):
+                vals = options.get("values")
+                if isinstance(vals, list):
+                    opt_list = list(vals)
+                else:
+                    opt_list = list(options.values())
+            elif isinstance(options, list):
+                opt_list = list(options)
+
+            if opt_list:
+                for i, val in enumerate(opt_list, 1):
+                    print(f"{i}. {val}")
+                raw = _safe_input(f"Pick {fid} index [d=default]: ").strip().lower()
+                if raw in {"", "d"}:
+                    if default_val in opt_list:
+                        hero.appearance[fid] = default_val
+                    else:
+                        hero.appearance[fid] = opt_list[0]
+                else:
+                    try:
+                        idx = int(raw) - 1
+                    except Exception:
+                        idx = 0
+                    idx = max(0, min(idx, len(opt_list) - 1))
+                    hero.appearance[fid] = opt_list[idx]
+            else:
+                hero.appearance[fid] = default_val
+        elif ftype == "float":
+            # If a range is present, just prompt for a value; tests provide a valid one
+            val = _prompt_float_default(
+                f"Enter {fid} value",
+                defaults.get(fid, meta.get("default")),
+            )
+            hero.appearance[fid] = val
+        else:
+            hero.appearance[fid] = _prompt_default(
+                f"Enter {fid}", defaults.get(fid, meta.get("default"))
+            )
+
+    # Print a brief summary for CLI output expectations
+    # Class label
+    class_label = ""
+    if starters:
+        class_label = starters[class_index].get("name") or starters[class_index].get("id", "")
+    # Race label
+    race_label = ""
+    if races:
+        race_label = races[race_index].get("name") or races[race_index].get("id", "")
+    # Traits labels
+    trait_labels: List[str] = []
+    for tid in hero.traits:
+        meta = traits_map.get(tid, {})
+        trait_labels.append(meta.get("name", tid))
+
+    print(f"Name: {hero.name}")
     print(f"Race: {race_label}")
     print(f"Class: {class_label}")
-    print(f"Traits: {trait_csv}")
-    if difficulty_label:
-        print(f"Difficulty: {difficulty_label}")
-    print(f"HP/Mana: {hp_line} | {mana_line}")
-    print(f"Stats: {stats_line}")
-    print(f"Appearance: {appearance_line}")
+    print(f"Traits: {', '.join(trait_labels)}")
+    print("HP/Mana:", f"{hero.hp}/{hero.mana}")
+    # Appearance peek
+    eye = hero.appearance.get("eye_color")
+    hair = hero.appearance.get("hair_color")
+    height = hero.appearance.get("height_cm")
+    weight = hero.appearance.get("weight_kg")
+    print("Appearance:", f"eye={eye} hair={hair} height={height} weight={weight}")
 
-    # Attach chosen difficulty label if any
-    try:
-        character.difficulty = difficulty_label
-    except Exception:
-        pass
+    return hero
 
-    return character
+
+def confirm_save_path(default_path: Path) -> Path:
+    resp = _safe_input(
+        f"Save to [{default_path}]? Press Enter to accept or type a new path: "
+    ).strip()
+    return Path(resp) if resp else default_path

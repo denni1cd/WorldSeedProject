@@ -20,15 +20,32 @@ from character_creation.services.balance import current_profile
 
 def main() -> None:
     root = Path(__file__).parents[1]
-    # Resolve data paths
-    stats_path = root / "character_creation" / "data" / "stats" / "stats.yaml"
-    classes_path = root / "character_creation" / "data" / "classes.yaml"
-    traits_path = root / "character_creation" / "data" / "traits.yaml"
-    races_path = root / "character_creation" / "data" / "races.yaml"
-    slots_path = root / "character_creation" / "data" / "slots.yaml"
-    fields_path = root / "character_creation" / "data" / "appearance" / "fields.yaml"
-    defaults_path = root / "character_creation" / "data" / "appearance" / "defaults.yaml"
-    resources_path = root / "character_creation" / "data" / "resources.yaml"
+    # Resolve data paths with new layout preference
+    data_root = root / "character_creation" / "data"
+    char = data_root / "character"
+    backend = data_root / "backend"
+
+    def pick(*candidates: Path) -> Path:
+        for p in candidates:
+            try:
+                if p.exists():
+                    return p
+            except Exception:
+                continue
+        return candidates[-1]
+
+    stats_path = pick(char / "stats" / "stats.yaml", data_root / "stats" / "stats.yaml")
+    classes_path = pick(char / "classes.yaml", data_root / "classes.yaml")
+    traits_path = pick(char / "traits.yaml", data_root / "traits.yaml")
+    races_path = pick(char / "races.yaml", data_root / "races.yaml")
+    slots_path = pick(char / "slots.yaml", data_root / "slots.yaml")
+    fields_path = pick(
+        char / "appearance" / "fields.yaml", data_root / "appearance" / "fields.yaml"
+    )
+    defaults_path = pick(
+        char / "appearance" / "defaults.yaml", data_root / "appearance" / "defaults.yaml"
+    )
+    resources_path = pick(backend / "resources.yaml", data_root / "resources.yaml")
 
     # Load YAML data
     stat_tmpl = stats_loader.load_stat_template(stats_path)
@@ -40,7 +57,7 @@ def main() -> None:
     defaults = appearance_loader.load_appearance_defaults(defaults_path)
     resources = resources_loader.load_resources(resources_path)
     # Formulas
-    formulas_path = root / "character_creation" / "data" / "formulas.yaml"
+    formulas_path = pick(backend / "formulas.yaml", data_root / "formulas.yaml")
     try:
         import yaml  # noqa: PLC0415
 
@@ -48,16 +65,14 @@ def main() -> None:
     except Exception:
         formulas = {}
     # Difficulty config
-    difficulty_path = root / "character_creation" / "data" / "difficulty.yaml"
+    difficulty_path = pick(backend / "difficulty.yaml", data_root / "difficulty.yaml")
     balance_cfg = difficulty_loader.load_difficulty(difficulty_path)
     balance_prof = current_profile(balance_cfg)
 
     # Load content packs config and merged overlays (tolerate absence)
-    packs_cfg_path = root / "character_creation" / "data" / "content_packs.yaml"
+    packs_cfg_path = pick(char / "content_packs.yaml", data_root / "content_packs.yaml")
     packs_cfg = load_packs_config(packs_cfg_path)
-    merged_overlay = load_and_merge_enabled_packs(
-        base_root=root / "character_creation" / "data", packs_cfg=packs_cfg
-    )
+    merged_overlay = load_and_merge_enabled_packs(base_root=data_root, packs_cfg=packs_cfg)
 
     # Apply merges to catalogs
     if merged_overlay:
