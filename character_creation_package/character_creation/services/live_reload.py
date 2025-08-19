@@ -5,7 +5,13 @@ from typing import Any, Dict, Callable
 import time
 
 import yaml
-from watchfiles import watch
+
+try:
+    from watchfiles import watch
+
+    WATCHFILES_AVAILABLE = True
+except ImportError:
+    WATCHFILES_AVAILABLE = False
 
 from ..loaders import (
     stats_loader,
@@ -234,6 +240,11 @@ class CatalogReloader:
         callback: Callable[[Dict[str, Any], int, list], None],
         debounce_ms: int = 300,
     ) -> None:
+        if not WATCHFILES_AVAILABLE:
+            raise ImportError(
+                "watchfiles is not installed. Install it with: pip install watchfiles"
+            )
+
         data_dir = str(self.data_root)
         last_emit = 0.0
         for changes in watch(data_dir, recursive=True):

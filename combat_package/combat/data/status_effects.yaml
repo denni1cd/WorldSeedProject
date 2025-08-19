@@ -1,0 +1,28 @@
+effects:
+  burning:
+    name: "Burning"
+    damage_type: fire
+    max_stacks: 1          # re-application refreshes duration
+    stack_mode: refresh    # refresh | add
+    duration: 3            # in turns
+    per_tick: "2 + INT*0.05"   # attacker INT helps a bit
+    narration:
+      apply:
+        - { text: "{target} catches fire!", weight: 2 }
+        - { text: "Flames take hold of {target}'s garb.", weight: 1 }
+      tick:
+        - { text: "{target} is {adj_fire} for {amount} damage.", weight: 2 }
+        - { text: "{target} bats at the flames ({amount}).", weight: 1 }
+
+  poison:
+    name: "Poisoned"
+    damage_type: poison
+    max_stacks: 3
+    stack_mode: add        # each stack adds per_tick and duration does not refresh
+    duration: 4
+    per_tick: "1 + INT*0.02"
+    narration:
+      apply:
+        - { text: "{target}'s veins darken—poison takes hold.", weight: 2 }
+      tick:
+        - { text: "{target} suffers {amount} poison damage.", weight: 2 }
