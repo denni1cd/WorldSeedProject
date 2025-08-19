@@ -14,9 +14,17 @@ BODY = {"groups": {"humanoid": ["chest"]}, "weights": {"humanoid": {"chest": 1.0
 
 def test_crit_increases_damage():
     atk = Combatant(
-        "A", "A", {"ATT": 10, "DEX": 10, "WPN": 5}, hp=20.0, mana=0.0, resist={}, tags=["humanoid"]
+        "A",
+        "A",
+        {"ATT": 10, "DEX": 10, "WPN": 5},
+        hp=20.0,
+        mana=0.0,
+        resist={},
+        tags=["humanoid"],
     )
-    tgt = Combatant("B", "B", {"DEX": 1, "ARM": 0}, hp=20.0, mana=0.0, resist={}, tags=["humanoid"])
+    tgt = Combatant(
+        "B", "B", {"DEX": 1, "ARM": 0}, hp=20.0, mana=0.0, resist={}, tags=["humanoid"]
+    )
     # non-crit
     r1 = resolve_attack(atk, tgt, ABILITY, BODY, RandomSource(seed=1))
     assert r1.hit
@@ -37,7 +45,13 @@ def test_crit_increases_damage():
 
 def test_resistance_reduces_damage():
     atk = Combatant(
-        "A", "A", {"ATT": 10, "DEX": 10, "WPN": 5}, hp=20.0, mana=0.0, resist={}, tags=["humanoid"]
+        "A",
+        "A",
+        {"ATT": 10, "DEX": 10, "WPN": 5},
+        hp=20.0,
+        mana=0.0,
+        resist={},
+        tags=["humanoid"],
     )
     tgt = Combatant(
         "B",

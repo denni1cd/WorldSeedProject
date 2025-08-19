@@ -15,7 +15,11 @@ def stat_tmpl():
     from pathlib import Path
 
     stats_path = (
-        Path(__file__).parent.parent / "character_creation" / "data" / "stats" / "stats.yaml"
+        Path(__file__).parent.parent
+        / "character_creation"
+        / "data"
+        / "stats"
+        / "stats.yaml"
     )
     return stats_loader.load_stat_template(stats_path)
 
@@ -25,7 +29,9 @@ def slot_tmpl():
     # Use the correct function and path for loading slots
     from pathlib import Path
 
-    slots_path = Path(__file__).parent.parent / "character_creation" / "data" / "slots.yaml"
+    slots_path = (
+        Path(__file__).parent.parent / "character_creation" / "data" / "slots.yaml"
+    )
     return slots_loader.load_slot_template(slots_path)
 
 
@@ -51,7 +57,12 @@ def test_character_init_flow(
     tmp_path, stat_tmpl, slot_tmpl, appearance_fields, appearance_defaults, resources
 ):
     hero = create_new_character(
-        "TestHero", stat_tmpl, slot_tmpl, appearance_fields, appearance_defaults, resources
+        "TestHero",
+        stat_tmpl,
+        slot_tmpl,
+        appearance_fields,
+        appearance_defaults,
+        resources,
     )
     # Assert stats
     for k, v in stat_tmpl.items():

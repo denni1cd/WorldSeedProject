@@ -1,7 +1,9 @@
 from typing import Dict, Any
 
 
-def item_fits_slot(item: Dict[str, Any], slot_id: str, slot_template: Dict[str, Any]) -> bool:
+def item_fits_slot(
+    item: Dict[str, Any], slot_id: str, slot_template: Dict[str, Any]
+) -> bool:
     """
     Return True if the item's 'slot' allows equipping into the given slot_id.
 
@@ -12,7 +14,9 @@ def item_fits_slot(item: Dict[str, Any], slot_id: str, slot_template: Dict[str, 
     """
     # Build a map of slot_id -> slot_definition regardless of nesting under 'slots'
     slot_map: Dict[str, Any] = (
-        slot_template["slots"] if isinstance(slot_template.get("slots"), dict) else slot_template
+        slot_template["slots"]
+        if isinstance(slot_template.get("slots"), dict)
+        else slot_template
     )
 
     allowed = item.get("slot")

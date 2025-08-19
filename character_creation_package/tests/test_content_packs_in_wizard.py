@@ -18,7 +18,12 @@ from character_creation.loaders.content_packs_loader import (
 from character_creation.ui.cli.wizard import run_wizard
 
 
-DATA_ROOT = Path(__file__).parents[2] / "character_creation_package" / "character_creation" / "data"
+DATA_ROOT = (
+    Path(__file__).parents[2]
+    / "character_creation_package"
+    / "character_creation"
+    / "data"
+)
 
 
 def test_wizard_can_select_pack_race_and_class(monkeypatch, tmp_path):
@@ -102,7 +107,9 @@ def test_wizard_can_select_pack_race_and_class(monkeypatch, tmp_path):
     assert race_index_1based is not None
 
     # Inputs: name, pick race index, pick class index, provide a valid trait id (e.g., 'brave')
-    inputs = iter(["PackHero", str(race_index_1based), str(class_index_1based), "brave"])
+    inputs = iter(
+        ["PackHero", str(race_index_1based), str(class_index_1based), "brave"]
+    )
     monkeypatch.setattr(builtins, "input", lambda _: next(inputs))
 
     hero = run_wizard(

@@ -80,3 +80,23 @@ def test_run_round_produces_log_and_damage():
     assert len(enc.log) >= 1
     assert a.hp < 21.0 or b.hp < 21.0
     assert "hits" in enc.log[0] or "slashes" in enc.log[0] or "takes" in enc.log[0]
+
+
+def test_effect_apply_and_tick_narration():
+    from combat.engine.narration import render_status_apply, render_dot_tick
+    from combat.loaders.status_effects_loader import load_status_effects
+    from combat.loaders.narration_loader import load_narration
+    from combat.engine.rng import RandomSource
+    from pathlib import Path
+
+    eff = load_status_effects(
+        Path(__file__).parents[1] / "combat" / "data" / "status_effects.yaml"
+    )
+    narr = load_narration(
+        Path(__file__).parents[1] / "combat" / "data" / "narration.yaml"
+    )
+    rng = RandomSource(5)
+    line_apply = render_status_apply("Target", "burning", eff, narr, rng)
+    line_tick = render_dot_tick("Target", "burning", 3.0, eff, narr, rng)
+    assert isinstance(line_apply, str) and line_apply
+    assert isinstance(line_tick, str) and line_tick

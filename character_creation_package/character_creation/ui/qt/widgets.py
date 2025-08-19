@@ -119,13 +119,20 @@ class StatGrid(QWidget):
                 val = v["base"]
             else:
                 val = v
-            lines.append(f"{k:<4} {val:.2f}" if isinstance(val, (int, float)) else f"{k:<4} {val}")
+            lines.append(
+                f"{k:<4} {val:.2f}"
+                if isinstance(val, (int, float))
+                else f"{k:<4} {val}"
+            )
         self.body.setText("\n".join(lines))
 
 
 class ClassCardList(QWidget):
     def __init__(
-        self, starters: List[Dict[str, Any]], on_selected: Callable[[int], None], parent=None
+        self,
+        starters: List[Dict[str, Any]],
+        on_selected: Callable[[int], None],
+        parent=None,
     ):
         super().__init__(parent)
         self.starters = starters

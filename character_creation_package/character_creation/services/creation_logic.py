@@ -12,7 +12,9 @@ def available_starting_classes(
     return [cls for cls in classes if not cls.get("prereq")]
 
 
-def validate_traits(selected_ids: List[str], trait_catalog: Dict[str, dict]) -> List[str]:
+def validate_traits(
+    selected_ids: List[str], trait_catalog: Dict[str, dict]
+) -> List[str]:
     """
     Return a deduplicated list of trait ids that exist in trait_catalog["traits"].
     Ignore unknown ids.

@@ -13,7 +13,11 @@ def stat_tmpl():
     from pathlib import Path
 
     stats_path = (
-        Path(__file__).parent.parent / "character_creation" / "data" / "stats" / "stats.yaml"
+        Path(__file__).parent.parent
+        / "character_creation"
+        / "data"
+        / "stats"
+        / "stats.yaml"
     )
     return stats_loader.load_stat_template(stats_path)
 
@@ -22,7 +26,9 @@ def stat_tmpl():
 def slot_tmpl():
     from pathlib import Path
 
-    slots_path = Path(__file__).parent.parent / "character_creation" / "data" / "slots.yaml"
+    slots_path = (
+        Path(__file__).parent.parent / "character_creation" / "data" / "slots.yaml"
+    )
     return slots_loader.load_slot_template(slots_path)
 
 
@@ -68,7 +74,11 @@ def test_gain_xp_rollover(blank_hero, stat_tmpl):
 
 def test_add_class(blank_hero):
     blank_hero.stats = {"STR": 1.0}
-    fighter_def = {"id": "fighter", "grants_stats": {"STR": 1.0}, "abilities": ["Power Strike"]}
+    fighter_def = {
+        "id": "fighter",
+        "grants_stats": {"STR": 1.0},
+        "abilities": ["Power Strike"],
+    }
     blank_hero.add_class(fighter_def)
     assert "fighter" in blank_hero.classes
     assert blank_hero.stats["STR"] == 2.0
@@ -85,7 +95,9 @@ def test_equipment_cycle(blank_hero, slot_tmpl):
     blank_hero.init_equipment_slots(slot_tmpl)
     blank_hero.add_to_inventory("iron_sword")
     # Dummy items_catalog for test
-    items_catalog = {"iron_sword": {"id": "iron_sword", "slot": "hand_main", "mods": {}}}
+    items_catalog = {
+        "iron_sword": {"id": "iron_sword", "slot": "hand_main", "mods": {}}
+    }
     blank_hero.equip("iron_sword", "hand_main", items_catalog)
     assert blank_hero.equipment["hand_main"] == "iron_sword"
     blank_hero.unequip("hand_main", items_catalog)

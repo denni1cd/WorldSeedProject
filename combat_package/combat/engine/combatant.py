@@ -12,6 +12,7 @@ class Combatant:
     mana: float
     resist: Dict[str, float] = field(default_factory=dict)
     tags: List[str] = field(default_factory=list)  # e.g., ["humanoid"]
+    statuses: List[dict] = field(default_factory=list)  # runtime status instances
 
     def is_alive(self) -> bool:
         return self.hp > 0

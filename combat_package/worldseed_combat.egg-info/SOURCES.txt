@@ -14,7 +14,12 @@ combat/loaders/abilities_loader.py
 combat/loaders/body_parts_loader.py
 combat/loaders/damage_types_loader.py
 combat/loaders/narration_loader.py
+combat/loaders/status_effects_loader.py
+tests/test_damage_math.py
+tests/test_effects_burning.py
+tests/test_effects_stack.py
 tests/test_mvp_flow.py
+tests/test_narration_variety.py
 worldseed_combat.egg-info/PKG-INFO
 worldseed_combat.egg-info/SOURCES.txt
 worldseed_combat.egg-info/dependency_links.txt

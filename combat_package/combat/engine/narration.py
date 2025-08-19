@@ -72,16 +72,63 @@ def render_event(
         tpl_list = tpl_entry
 
     template = (
-        weight_choice(tpl_list) if tpl_list else "{actor} hits {target} for {amount} {dtype}."
+        weight_choice(tpl_list)
+        if tpl_list
+        else "{actor} hits {target} for {amount} {dtype}."
     )
 
     tokens = {
         "actor": actor,
         "target": target,
-        "amount": (int(amount) if abs(amount - round(amount)) < 1e-6 else f"{amount:.1f}"),
+        "amount": (
+            int(amount) if abs(amount - round(amount)) < 1e-6 else f"{amount:.1f}"
+        ),
         "dtype": dtype,
         "body_part": body_part,
         "verb_slash": choice(verbs.get("slash", [])),
         "adj_fire": choice(adjs.get("fire", [])),
     }
     return template.format(**tokens)
+
+
+def render_status_apply(
+    target_name: str,
+    eff_id: str,
+    effects_cfg: Dict[str, Any],
+    narration_cfg: Dict[str, Any],
+    rng: RandomSource,
+) -> str:
+    ed = (effects_cfg.get("effects") or {}).get(eff_id, {})
+    lines = (ed.get("narration") or {}).get("apply", [])
+    if not lines:
+        return f"{target_name} is affected by {ed.get('name', eff_id)}."
+    txt = rng.choice([x.get("text", "") for x in lines]) if lines else ""
+    # allow adjectives (e.g., adjectives.fire)
+    adj_fire = (
+        rng.choice((narration_cfg.get("adjectives") or {}).get("fire", []))
+        if (narration_cfg.get("adjectives") or {}).get("fire", [])
+        else ""
+    )
+    return txt.format(target=target_name, adj_fire=adj_fire)
+
+
+def render_dot_tick(
+    target_name: str,
+    eff_id: str,
+    amount: float,
+    effects_cfg: Dict[str, Any],
+    narration_cfg: Dict[str, Any],
+    rng: RandomSource,
+) -> str:
+    ed = (effects_cfg.get("effects") or {}).get(eff_id, {})
+    lines = (ed.get("narration") or {}).get("tick", [])
+    if not lines:
+        return f"{target_name} suffers {int(amount) if abs(amount-round(amount))<1e-6 else f'{amount:.1f}'} damage over time."
+    txt = rng.choice([x.get("text", "") for x in lines]) if lines else ""
+    adj_fire = (
+        rng.choice((narration_cfg.get("adjectives") or {}).get("fire", []))
+        if (narration_cfg.get("adjectives") or {}).get("fire", [])
+        else ""
+    )
+    amt_str = int(amount) if abs(amount - round(amount)) < 1e-6 else f"{amount:.1f}"
+    return txt.format(target=target_name, amount=amt_str, adj_fire=adj_fire)

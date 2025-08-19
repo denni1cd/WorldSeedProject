@@ -41,7 +41,10 @@ def _outline(p: QPainter, x: int, y: int, w: int, h: int, c: QColor = INK) -> No
 
 def _scale_to_pixmap(img: QImage, scale: int = SCALE) -> QPixmap:
     return QPixmap.fromImage(img).scaled(
-        img.width() * scale, img.height() * scale, Qt.KeepAspectRatio, Qt.FastTransformation
+        img.width() * scale,
+        img.height() * scale,
+        Qt.KeepAspectRatio,
+        Qt.FastTransformation,
     )
 
 

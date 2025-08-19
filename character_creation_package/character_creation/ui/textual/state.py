@@ -81,7 +81,9 @@ def build_character_from_selections(
     hero.add_class(chosen_class_def)
 
     # Validate trait ids against catalog and apply
-    valid_trait_ids = [tid for tid in sel.trait_ids if tid in trait_catalog.get("traits", {})]
+    valid_trait_ids = [
+        tid for tid in sel.trait_ids if tid in trait_catalog.get("traits", {})
+    ]
     hero.add_traits(valid_trait_ids, trait_catalog)
 
     return hero
