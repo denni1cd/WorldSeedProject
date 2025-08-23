@@ -6,12 +6,8 @@ from pathlib import Path
 
 
 def test_burning_ticks_and_expires(tmp_path):
-    cfg = load_status_effects(
-        Path(__file__).parents[1] / "combat" / "data" / "status_effects.yaml"
-    )
-    victim = Combatant(
-        "V", "Victim", {"INT": 10}, hp=20.0, mana=0.0, resist={}, tags=["humanoid"]
-    )
+    cfg = load_status_effects(Path(__file__).parents[1] / "combat" / "data" / "status_effects.yaml")
+    victim = Combatant("V", "Victim", {"INT": 10}, hp=20.0, mana=0.0, resist={}, tags=["humanoid"])
     # apply burning
     inst = apply_status(victim, "burning", cfg, source_id="S")
     assert inst and victim.statuses and victim.statuses[0]["id"] == "burning"
@@ -30,12 +26,8 @@ def test_burning_ticks_and_expires(tmp_path):
 def test_burning_respects_resistance():
     from combat.engine.rng import RandomSource
 
-    cfg = load_status_effects(
-        Path(__file__).parents[1] / "combat" / "data" / "status_effects.yaml"
-    )
-    v1 = Combatant(
-        "V1", "V1", {"INT": 10}, hp=20.0, mana=0.0, resist={}, tags=["humanoid"]
-    )
+    cfg = load_status_effects(Path(__file__).parents[1] / "combat" / "data" / "status_effects.yaml")
+    v1 = Combatant("V1", "V1", {"INT": 10}, hp=20.0, mana=0.0, resist={}, tags=["humanoid"])
     v2 = Combatant(
         "V2",
         "V2",

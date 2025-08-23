@@ -89,12 +89,8 @@ def test_effect_apply_and_tick_narration():
     from combat.engine.rng import RandomSource
     from pathlib import Path
 
-    eff = load_status_effects(
-        Path(__file__).parents[1] / "combat" / "data" / "status_effects.yaml"
-    )
-    narr = load_narration(
-        Path(__file__).parents[1] / "combat" / "data" / "narration.yaml"
-    )
+    eff = load_status_effects(Path(__file__).parents[1] / "combat" / "data" / "status_effects.yaml")
+    narr = load_narration(Path(__file__).parents[1] / "combat" / "data" / "narration.yaml")
     rng = RandomSource(5)
     line_apply = render_status_apply("Target", "burning", eff, narr, rng)
     line_tick = render_dot_tick("Target", "burning", 3.0, eff, narr, rng)

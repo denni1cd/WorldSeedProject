@@ -7,12 +7,8 @@ from combat.engine.rng import RandomSource
 
 
 def test_poison_stacks_up_to_cap_and_persists():
-    cfg = load_status_effects(
-        Path(__file__).parents[1] / "combat" / "data" / "status_effects.yaml"
-    )
-    v = Combatant(
-        "V", "Victim", {"INT": 20}, hp=30.0, mana=0.0, resist={}, tags=["humanoid"]
-    )
+    cfg = load_status_effects(Path(__file__).parents[1] / "combat" / "data" / "status_effects.yaml")
+    v = Combatant("V", "Victim", {"INT": 20}, hp=30.0, mana=0.0, resist={}, tags=["humanoid"])
     # apply poison thrice, duration should not reset (stack_mode=add)
     apply_status(v, "poison", cfg)
     apply_status(v, "poison", cfg)
