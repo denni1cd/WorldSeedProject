@@ -1,8 +1,29 @@
 abilities:
   - id: basic_attack
     name: "Basic Attack"
+    kind: "attack"                # future: "support", "heal", etc.
     formula: "ATT + WPN - ARM*0.6"
     damage_type: slashing
+    targeting: single_enemy       # single_enemy | self
     crit:
-      chance: "0.05 + DEX*0.002"   # ~5% + DEX scaled
+      chance: "0.05 + DEX*0.002"
       multiplier: 1.5
+    resource_cost: {}             # no cost
+    cooldown: 0
+
+  - id: fireball
+    name: "Fireball"
+    kind: "attack"
+    formula: "INT*1.2 + 6"
+    damage_type: fire
+    targeting: single_enemy
+    crit:
+      chance: "0.10 + DEX*0.002"
+      multiplier: 1.5
+    resource_cost: { mana: 5 }
+    cooldown: 2
+    on_hit:
+      apply_status:
+        - { id: burning, chance: 0.35 }
+
+# you can add more abilities later by just editing this YAML.

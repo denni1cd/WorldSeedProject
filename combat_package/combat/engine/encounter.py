@@ -42,6 +42,15 @@ class Encounter:
         self._ptr = (self._ptr + 1) % len(self._order)
         return self.participants[idx]
 
+    def tick_cooldowns(self, actor: Combatant) -> None:
+        if not actor.cooldowns:
+            return
+        for k in list(actor.cooldowns.keys()):
+            actor.cooldowns[k] = max(0, int(actor.cooldowns.get(k, 0)) - 1)
+            if actor.cooldowns[k] == 0:
+                # keep key with 0 so UI can show ready state; or remove if preferred
+                pass
+
     def run_round(self) -> dict:
         """
         Very small demo round:
