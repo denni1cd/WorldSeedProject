@@ -4,6 +4,7 @@ combat/__init__.py
 combat/engine/__init__.py
 combat/engine/abilities.py
 combat/engine/actions.py
+combat/engine/ai.py
 combat/engine/combatant.py
 combat/engine/effects.py
 combat/engine/encounter.py
@@ -11,8 +12,10 @@ combat/engine/items.py
 combat/engine/narration.py
 combat/engine/resolution.py
 combat/engine/rng.py
+combat/engine/threat.py
 combat/loaders/__init__.py
 combat/loaders/abilities_loader.py
+combat/loaders/ai_rules_loader.py
 combat/loaders/body_parts_loader.py
 combat/loaders/damage_types_loader.py
 combat/loaders/items_loader.py
@@ -23,6 +26,7 @@ combat/validators/__init__.py
 combat/validators/schema.py
 combat/validators/validate.py
 tests/test_abilities_core.py
+tests/test_ai_rules_and_threat.py
 tests/test_damage_math.py
 tests/test_effects_burning.py
 tests/test_effects_stack.py

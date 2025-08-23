@@ -1,0 +1,31 @@
+ai:
+  rules:
+    - id: guard_when_low
+      ability: guard
+      target: self
+      require:
+        self_hp_le: 12
+        ability_ready: true
+
+    - id: fireball_if_mana
+      ability: fireball
+      target: highest_threat
+      require:
+        self_mana_ge: 5
+        ability_ready: true
+
+    - id: provoke_early
+      ability: provoke
+      target: highest_threat
+      require:
+        ability_ready: true
+
+    - id: basic_fallback
+      ability: basic_attack
+      target: highest_threat
+
+# Notes:
+# - Rules are checked top-down. The first whose requirements pass is used.
+# - "ability_ready: true" implies both resource & cooldown checks.
+# - Targets supported here: self, highest_threat, lowest_hp_enemy, random_enemy, all_enemies.
+# - You can add more rules or abilities in YAML without code changes.
