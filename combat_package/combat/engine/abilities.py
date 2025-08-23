@@ -4,7 +4,7 @@ from typing import Dict, Any, List, Tuple
 from .combatant import Combatant
 from .rng import RandomSource
 from .resolution import resolve_attack
-from .effects import apply_on_hit_effects
+from .effects import apply_on_hit_effects, modify_incoming_damage
 from ..loaders.body_parts_loader import load_body_parts
 from pathlib import Path
 
@@ -33,13 +33,25 @@ def _is_enemy(a: Combatant, b: Combatant) -> bool:
     return a.team != b.team
 
 
+def _taunt_source_id(c: Combatant) -> str | None:
+    for st in c.statuses or []:
+        if st.get("id") == "taunted" and st.get("source_id"):
+            return st["source_id"]
+    return None
+
+
 def _targets_by_spec(
     participants: List[Combatant], actor: Combatant, spec: str, rng: RandomSource
 ) -> List[str]:
     living = [c for c in participants if c.is_alive()]
     enemies = [c for c in living if _is_enemy(actor, c)]
     allies = [c for c in living if (c.team == actor.team)]
-
+    # TAUNT steering: if actor is taunted, enemy list collapses to the taunter if alive
+    tsrc = _taunt_source_id(actor)
+    if tsrc:
+        tunit = next((c for c in enemies if c.id == tsrc and c.is_alive()), None)
+        if tunit:
+            enemies = [tunit]
     if spec == "self":
         return [actor.id]
     if spec == "single_enemy":
@@ -135,14 +147,18 @@ def execute_ability(
             continue
         res = resolve_attack(actor, tgt, ability_def, body_cfg, rng)
         if res.hit:
-            tgt.hp = max(0.0, tgt.hp - res.amount)
+            # NEW: guard reduction before applying damage
+            new_amt, pre_events = modify_incoming_damage(tgt, res.amount, res.dtype)
+            for pe in pre_events:
+                evs.append(pe)
+            tgt.hp = max(0.0, tgt.hp - new_amt)
             evs.append(
                 {
                     "type": "hit",
                     "actor_id": actor.id,
                     "target_id": tid,
                     "ability_id": ability_def.get("id"),
-                    "amount": res.amount,
+                    "amount": new_amt,
                     "dtype": res.dtype,
                     "crit": res.crit,
                     "body_part": res.body_part,
@@ -175,4 +191,4 @@ def _load_status_cfg():
     from ..loaders.status_effects_loader import load_status_effects
     from pathlib import Path
 
-    return load_status_effects(Path(__file__).parents[2] / "data" / "status_effects.yaml")
+    return load_status_effects(Path(__file__).parents[1] / "data" / "status_effects.yaml")

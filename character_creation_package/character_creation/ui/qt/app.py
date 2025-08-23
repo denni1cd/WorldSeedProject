@@ -55,13 +55,9 @@ class WizardWindow(QMainWindow):
 
         # --- load data ---
         self.data_root = data_root
-        self.stat_tmpl = stats_loader.load_stat_template(
-            data_root / "stats" / "stats.yaml"
-        )
+        self.stat_tmpl = stats_loader.load_stat_template(data_root / "stats" / "stats.yaml")
         self.slot_tmpl = slots_loader.load_slot_template(data_root / "slots.yaml")
-        self.class_catalog = classes_loader.load_class_catalog(
-            data_root / "classes.yaml"
-        )
+        self.class_catalog = classes_loader.load_class_catalog(data_root / "classes.yaml")
         self.trait_catalog = traits_loader.load_trait_catalog(data_root / "traits.yaml")
         self.appearance_fields = appearance_loader.load_appearance_fields(
             data_root / "appearance" / "fields.yaml"
@@ -70,23 +66,17 @@ class WizardWindow(QMainWindow):
             data_root / "appearance" / "defaults.yaml"
         )
         self.resources = resources_loader.load_resources(data_root / "resources.yaml")
-        self.progression = progression_loader.load_progression(
-            data_root / "progression.yaml"
-        )
+        self.progression = progression_loader.load_progression(data_root / "progression.yaml")
         self.race_catalog = races_loader.load_race_catalog(data_root / "races.yaml")
         import yaml
 
-        self.formulas = yaml.safe_load(
-            open(data_root / "formulas.yaml", "r", encoding="utf-8")
-        )
+        self.formulas = yaml.safe_load(open(data_root / "formulas.yaml", "r", encoding="utf-8"))
 
         self.balance_cfg = {}
         self.balance_prof = None
         if difficulty_loader and current_profile:
             try:
-                self.balance_cfg = difficulty_loader.load_difficulty(
-                    data_root / "difficulty.yaml"
-                )
+                self.balance_cfg = difficulty_loader.load_difficulty(data_root / "difficulty.yaml")
                 self.balance_prof = current_profile(self.balance_cfg)
             except Exception:
                 pass

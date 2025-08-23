@@ -27,9 +27,7 @@ def main() -> None:
     races_path = root / "character_creation" / "data" / "races.yaml"
     slots_path = root / "character_creation" / "data" / "slots.yaml"
     fields_path = root / "character_creation" / "data" / "appearance" / "fields.yaml"
-    defaults_path = (
-        root / "character_creation" / "data" / "appearance" / "defaults.yaml"
-    )
+    defaults_path = root / "character_creation" / "data" / "appearance" / "defaults.yaml"
     resources_path = root / "character_creation" / "data" / "resources.yaml"
 
     # Load YAML data

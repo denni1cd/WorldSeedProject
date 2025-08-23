@@ -156,9 +156,7 @@ def coerce_numeric(value: float, min_v: float, max_v: float) -> float:
     return float(v)
 
 
-def default_for_field(
-    field_id: str, fields_spec: Dict[str, Any], defaults: Dict[str, Any]
-) -> Any:
+def default_for_field(field_id: str, fields_spec: Dict[str, Any], defaults: Dict[str, Any]) -> Any:
     """Return defaults.get(field_id, fields_spec[field_id]['default'])."""
     spec = fields_spec.get("fields", fields_spec)
     meta = spec.get(field_id, {}) if isinstance(spec, dict) else {}

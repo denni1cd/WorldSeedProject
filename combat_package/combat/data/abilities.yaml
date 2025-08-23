@@ -26,4 +26,23 @@ abilities:
       apply_status:
         - { id: burning, chance: 0.35 }
 
+  - id: guard
+    name: "Guard"
+    kind: "stance"
+    targeting: self
+    resource_cost: {}
+    cooldown: 1
+    on_hit: {}            # not used; we apply status immediately
+  - id: provoke
+    name: "Provoke"
+    kind: "attack"        # lightweight attack that mostly applies taunt
+    formula: "ATT * 0.2"  # small jab, mostly for narrative
+    damage_type: slashing
+    targeting: single_enemy
+    crit: { chance: "0.0", multiplier: 1.5 }
+    resource_cost: {}
+    cooldown: 2
+    on_hit:
+      apply_status: [{ id: taunted, chance: 1.0 }]
+
 # you can add more abilities later by just editing this YAML.

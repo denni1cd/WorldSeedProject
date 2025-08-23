@@ -15,11 +15,7 @@ def stat_tmpl():
     from pathlib import Path
 
     stats_path = (
-        Path(__file__).parent.parent
-        / "character_creation"
-        / "data"
-        / "stats"
-        / "stats.yaml"
+        Path(__file__).parent.parent / "character_creation" / "data" / "stats" / "stats.yaml"
     )
     return stats_loader.load_stat_template(stats_path)
 
@@ -29,9 +25,7 @@ def slot_tmpl():
     # Use the correct function and path for loading slots
     from pathlib import Path
 
-    slots_path = (
-        Path(__file__).parent.parent / "character_creation" / "data" / "slots.yaml"
-    )
+    slots_path = Path(__file__).parent.parent / "character_creation" / "data" / "slots.yaml"
     return slots_loader.load_slot_template(slots_path)
 
 

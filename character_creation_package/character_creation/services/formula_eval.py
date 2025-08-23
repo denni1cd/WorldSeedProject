@@ -37,9 +37,7 @@ def _eval_node(node: ast.AST, context: Dict[str, Any]) -> float:
 
     elif isinstance(node, ast.Constant):
         if not isinstance(node.value, (int, float)):
-            raise ValueError(
-                f"Only numeric constants are allowed, not {type(node.value).__name__}"
-            )
+            raise ValueError(f"Only numeric constants are allowed, not {type(node.value).__name__}")
         return node.value
 
     elif isinstance(node, ast.Name):
@@ -66,9 +64,7 @@ def _eval_node(node: ast.AST, context: Dict[str, Any]) -> float:
             func = ALLOWED_FUNCTIONS[node.func.id]
             args = [_eval_node(arg, context) for arg in node.args]
             return func(*args)
-        func_name = (
-            node.func.id if isinstance(node.func, ast.Name) else "[complex expression]"
-        )
+        func_name = node.func.id if isinstance(node.func, ast.Name) else "[complex expression]"
         raise ValueError(f"Unsupported function call: '{func_name}'")
 
     elif isinstance(node, ast.UAdd):
@@ -108,8 +104,6 @@ def evaluate(expr: str, context: Dict[str, Any]) -> float:
 
     result = _eval_node(tree, context)
     if not isinstance(result, (int, float)):
-        raise TypeError(
-            f"Evaluation resulted in a non-numeric type: {type(result).__name__}"
-        )
+        raise TypeError(f"Evaluation resulted in a non-numeric type: {type(result).__name__}")
 
     return float(result)

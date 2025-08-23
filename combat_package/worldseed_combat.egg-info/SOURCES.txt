@@ -7,6 +7,7 @@ combat/engine/actions.py
 combat/engine/combatant.py
 combat/engine/effects.py
 combat/engine/encounter.py
+combat/engine/items.py
 combat/engine/narration.py
 combat/engine/resolution.py
 combat/engine/rng.py
@@ -14,6 +15,7 @@ combat/loaders/__init__.py
 combat/loaders/abilities_loader.py
 combat/loaders/body_parts_loader.py
 combat/loaders/damage_types_loader.py
+combat/loaders/items_loader.py
 combat/loaders/narration_loader.py
 combat/loaders/pack_loader.py
 combat/loaders/status_effects_loader.py
@@ -24,6 +26,8 @@ tests/test_abilities_core.py
 tests/test_damage_math.py
 tests/test_effects_burning.py
 tests/test_effects_stack.py
+tests/test_guard_and_taunt.py
+tests/test_items_use.py
 tests/test_mvp_flow.py
 tests/test_narration_variety.py
 tests/test_packs_and_validation.py

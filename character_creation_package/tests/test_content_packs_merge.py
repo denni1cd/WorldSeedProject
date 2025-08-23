@@ -13,12 +13,7 @@ from character_creation.loaders.content_packs_loader import (
 from character_creation.services.validate_data import validate_merged_catalogs
 
 
-DATA_ROOT = (
-    Path(__file__).parents[2]
-    / "character_creation_package"
-    / "character_creation"
-    / "data"
-)
+DATA_ROOT = Path(__file__).parents[2] / "character_creation_package" / "character_creation" / "data"
 
 
 def test_content_packs_merge_and_validate():

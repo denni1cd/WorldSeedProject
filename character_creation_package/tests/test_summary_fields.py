@@ -13,20 +13,13 @@ from character_creation.loaders import (
 from character_creation.ui.cli import wizard as wiz
 
 
-DATA_ROOT = (
-    Path(__file__).parents[2]
-    / "character_creation_package"
-    / "character_creation"
-    / "data"
-)
+DATA_ROOT = Path(__file__).parents[2] / "character_creation_package" / "character_creation" / "data"
 
 
 @pytest.fixture
 def loaders_dict():
     return {
-        "stat_tmpl": stats_loader.load_stat_template(
-            DATA_ROOT / "stats" / "stats.yaml"
-        ),
+        "stat_tmpl": stats_loader.load_stat_template(DATA_ROOT / "stats" / "stats.yaml"),
         "class_catalog": classes_loader.load_class_catalog(DATA_ROOT / "classes.yaml"),
         "trait_catalog": traits_loader.load_trait_catalog(DATA_ROOT / "traits.yaml"),
         "race_catalog": races_loader.load_race_catalog(DATA_ROOT / "races.yaml"),

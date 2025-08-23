@@ -119,11 +119,7 @@ class StatGrid(QWidget):
                 val = v["base"]
             else:
                 val = v
-            lines.append(
-                f"{k:<4} {val:.2f}"
-                if isinstance(val, (int, float))
-                else f"{k:<4} {val}"
-            )
+            lines.append(f"{k:<4} {val:.2f}" if isinstance(val, (int, float)) else f"{k:<4} {val}")
         self.body.setText("\n".join(lines))
 
 

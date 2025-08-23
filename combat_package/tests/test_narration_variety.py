@@ -59,13 +59,7 @@ def test_variety_in_physical_lines():
             "body_part": rng.choice(parts),
         }
         s = render_event(ctx, NARR, rng)
-        if (
-            "slashes" in s
-            or "cleaves" in s
-            or "carves" in s
-            or "hews" in s
-            or "rends" in s
-        ):
+        if "slashes" in s or "cleaves" in s or "carves" in s or "hews" in s or "rends" in s:
             uniq.add(s)
         if len(uniq) >= 6:
             break

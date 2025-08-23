@@ -5,6 +5,8 @@ from typing import Dict, List
 
 @dataclass
 class Combatant:
+    "test"
+
     id: str
     name: str
     stats: Dict[str, float]  # e.g., {"STR":8, "DEX":7, "INT":5, "ARM":2, "WPN":3}
@@ -15,6 +17,7 @@ class Combatant:
     statuses: List[dict] = field(default_factory=list)  # runtime status instances
     cooldowns: Dict[str, int] = field(default_factory=dict)  # ability_id -> remaining turns
     team: str = "neutral"  # NEW: team label for targeting logic
+    inventory: Dict[str, int] = field(default_factory=dict)  # NEW: item_id -> count
 
     def is_alive(self) -> bool:
         return self.hp > 0

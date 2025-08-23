@@ -1,0 +1,22 @@
+items:
+  healing_potion:
+    name: "Healing Potion"
+    kind: "consumable"
+    effects:
+      heal_hp: 12
+  mana_potion:
+    name: "Mana Potion"
+    kind: "consumable"
+    effects:
+      restore_mana: 8
+  fire_bomb:
+    name: "Fire Bomb"
+    kind: "throwable"
+    targeting: "single_enemy"
+    formula: "INT*0.4 + 6"
+    damage_type: "fire"
+  cleansing_draught:
+    name: "Cleansing Draught"
+    kind: "consumable"
+    effects:
+      cleanse_status: ["burning","poison"]

@@ -62,9 +62,7 @@ class NameScreen(Screen):
             self.app.sel.name = name
             # Route to difficulty if we have profiles, else straight to race
             try:
-                diffs = list(
-                    (self.app.balance_cfg or {}).get("difficulties", {}).keys()
-                )
+                diffs = list((self.app.balance_cfg or {}).get("difficulties", {}).keys())
             except Exception:
                 diffs = []
             if diffs:
@@ -124,9 +122,7 @@ class DifficultyScreen(Screen):
         items: List[ListItem] = []
         difficulties = list((self.app.balance_cfg or {}).get("difficulties", {}).keys())
         current = str(
-            (self.app.balance_cfg or {}).get(
-                "current", difficulties[0] if difficulties else ""
-            )
+            (self.app.balance_cfg or {}).get("current", difficulties[0] if difficulties else "")
         )
         for name in difficulties:
             label = name + (" (current)" if name == current else "")
@@ -145,13 +141,9 @@ class DifficultyScreen(Screen):
 
     def on_mount(self) -> None:
         try:
-            difficulties = list(
-                (self.app.balance_cfg or {}).get("difficulties", {}).keys()
-            )
+            difficulties = list((self.app.balance_cfg or {}).get("difficulties", {}).keys())
             current = str(
-                (self.app.balance_cfg or {}).get(
-                    "current", difficulties[0] if difficulties else ""
-                )
+                (self.app.balance_cfg or {}).get("current", difficulties[0] if difficulties else "")
             )
             lst = self.query_one("#diff_list", ListView)
             # preselect current
@@ -277,9 +269,7 @@ class TraitScreen(Screen):
         if event.button.id == "next":
             container = self.query_one("#trait_checks", Vertical)
             # Preserve order from catalog, enforce dedupe and max count
-            catalog_order = [
-                tid for tid, _ in state.list_traits(self.app.trait_catalog)
-            ]
+            catalog_order = [tid for tid, _ in state.list_traits(self.app.trait_catalog)]
             chosen_set = {cb.id for cb in container.query(Checkbox) if cb.value}
             chosen_ids = [tid for tid in catalog_order if tid in chosen_set]
             max_allowed = int(getattr(self.app, "traits_max", 2))
@@ -315,9 +305,7 @@ class AppearanceScreen(Screen):
                 if bounds:
                     hint = f" (min {bounds[0]}, max {bounds[1]})"
                 rows.append(Static(label + hint))
-                rows.append(
-                    Input(placeholder=str(meta.get("default", "")), id=f"num_{fid}")
-                )
+                rows.append(Input(placeholder=str(meta.get("default", "")), id=f"num_{fid}"))
             else:
                 # Opaque/any: show a readonly default
                 rows.append(Static(f"{label}: {meta.get('default')}", id=f"any_{fid}"))
@@ -340,9 +328,7 @@ class AppearanceScreen(Screen):
             return
         if event.button.id == "next":
             # Collect selections
-            fields = self.app.appearance_fields.get(
-                "fields", self.app.appearance_fields
-            )
+            fields = self.app.appearance_fields.get("fields", self.app.appearance_fields)
             base_dir = DATA_DIR / "appearance"
             selection: Dict[str, Any] = {}
             for fid, meta in fields.items():
@@ -358,9 +344,7 @@ class AppearanceScreen(Screen):
                     inp = self.query_one(f"#num_{fid}", Input)
                     raw = (inp.value or "").strip()
                     if raw:
-                        bounds = get_numeric_bounds(
-                            fid, self.app.appearance_fields, base_dir
-                        )
+                        bounds = get_numeric_bounds(fid, self.app.appearance_fields, base_dir)
                         try:
                             num = float(raw)
                             if bounds:
@@ -438,11 +422,7 @@ class SummaryScreen(Screen):
                 Static(f"Race: {summary.get('race_label', '')}"),
                 Static(f"Class: {summary.get('class_label', '')}"),
                 Static(f"Traits: {', '.join(summary.get('traits_labels', []))}"),
-                (
-                    Static(f"Difficulty: {difficulty_label}")
-                    if difficulty_label
-                    else Static("")
-                ),
+                (Static(f"Difficulty: {difficulty_label}") if difficulty_label else Static("")),
                 Static(f"HP: {summary.get('hp')}  Mana: {summary.get('mana')}"),
                 Static("Stats:"),
                 Static(stats_text),
@@ -486,9 +466,7 @@ class SummaryScreen(Screen):
                 # Apply balance to derived stats before saving if available
                 try:
                     if self.app.balance_profile:
-                        hero.difficulty = str(
-                            self.app.balance_cfg.get("current", "normal")
-                        )
+                        hero.difficulty = str(self.app.balance_cfg.get("current", "normal"))
                         hero.refresh_derived(
                             formulas=self.app.formulas,
                             stat_template=self.app.stat_tmpl,
@@ -594,9 +572,7 @@ class CreationApp(App):
         self.race_catalog = races_loader.load_race_catalog(races_path)
         self.slot_tmpl = slots_loader.load_slot_template(slots_path)
         self.appearance_fields = appearance_loader.load_appearance_fields(fields_path)
-        self.appearance_defaults = appearance_loader.load_appearance_defaults(
-            defaults_path
-        )
+        self.appearance_defaults = appearance_loader.load_appearance_defaults(defaults_path)
         self.resources = resources_loader.load_resources(resources_path)
         # Formulas
         try:
@@ -673,9 +649,7 @@ class CreationApp(App):
                 live_reload_enabled = bool(
                     ((dev_cfg or {}).get("dev") or {}).get("live_reload", False)
                 )
-                debounce_ms = int(
-                    ((dev_cfg or {}).get("dev") or {}).get("debounce_ms", 300)
-                )
+                debounce_ms = int(((dev_cfg or {}).get("dev") or {}).get("debounce_ms", 300))
             if live_reload_enabled:
                 self._reloader = CatalogReloader(DATA_DIR)
 
@@ -689,9 +663,7 @@ class CreationApp(App):
                 _apply_initial()
 
                 def _watcher():
-                    self._reloader.watch(
-                        self._on_catalogs_updated, debounce_ms=debounce_ms
-                    )
+                    self._reloader.watch(self._on_catalogs_updated, debounce_ms=debounce_ms)
 
                 t = threading.Thread(target=_watcher, daemon=True)
                 t.start()
@@ -705,9 +677,7 @@ class CreationApp(App):
         self.stat_tmpl = cats.get("stats", self.stat_tmpl)
         self.slot_tmpl = cats.get("slots", self.slot_tmpl)
         self.appearance_fields = cats.get("appearance_fields", self.appearance_fields)
-        self.appearance_defaults = cats.get(
-            "appearance_defaults", self.appearance_defaults
-        )
+        self.appearance_defaults = cats.get("appearance_defaults", self.appearance_defaults)
         self.resources = cats.get("resources", self.resources)
         self.class_catalog = cats.get("class_catalog", self.class_catalog)
         self.trait_catalog = cats.get("trait_catalog", self.trait_catalog)

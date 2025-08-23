@@ -85,9 +85,7 @@ def validate_races(catalog: Dict[str, Any]) -> None:
             try:
                 float(v)
             except Exception:
-                raise DataValidationError(
-                    f"race {rid} invalid grants_stats value for {k}"
-                )
+                raise DataValidationError(f"race {rid} invalid grants_stats value for {k}")
         ga = r.get("grants_abilities", [])
         if not isinstance(ga, list):
             raise DataValidationError(f"race {rid} grants_abilities not a list")
@@ -110,16 +108,12 @@ def validate_appearance_fields(fields: Dict[str, Any]) -> None:
         if ftype == "enum":
             has_table = "table" in meta or "table_ref" in meta
             if not has_table:
-                raise DataValidationError(
-                    f"appearance enum field {fid} missing table/table_ref"
-                )
+                raise DataValidationError(f"appearance enum field {fid} missing table/table_ref")
         # For numeric fields, accept 'range' or 'range_ref'
         if ftype in {"float", "number", "int"}:
             has_range = "range" in meta or "range_ref" in meta
             if not has_range:
-                raise DataValidationError(
-                    f"appearance float field {fid} missing range/range_ref"
-                )
+                raise DataValidationError(f"appearance float field {fid} missing range/range_ref")
 
 
 def validate_appearance_table(values: Any, table_name: str) -> None:
@@ -129,9 +123,7 @@ def validate_appearance_table(values: Any, table_name: str) -> None:
     if not isinstance(values, list) or not all(
         isinstance(x, (str, int, float)) or x is None for x in values
     ):
-        raise DataValidationError(
-            f"appearance table {table_name} must be a list of scalars"
-        )
+        raise DataValidationError(f"appearance table {table_name} must be a list of scalars")
 
 
 def validate_numeric_range(rng: Dict[str, Any], range_name: str) -> None:
@@ -143,9 +135,7 @@ def validate_numeric_range(rng: Dict[str, Any], range_name: str) -> None:
     has_minmax = "min" in rng and "max" in rng
     has_stats = "mean" in rng and "sd" in rng
     if not (has_minmax or has_stats):
-        raise DataValidationError(
-            f"range {range_name} must have (min,max) or (mean,sd)"
-        )
+        raise DataValidationError(f"range {range_name} must have (min,max) or (mean,sd)")
     if has_minmax and float(rng["min"]) > float(rng["max"]):
         raise DataValidationError(f"range {range_name} min>max")
 

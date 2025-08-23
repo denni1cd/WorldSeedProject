@@ -172,9 +172,7 @@ def tick_start_of_turn(
         amt = round(base * stacks * (1.0 - res), 1)
         if amt > 0:
             actor.hp = max(0.0, actor.hp - amt)
-            events.append(
-                {"effect_id": st["id"], "dtype": dtype or "damage", "amount": amt}
-            )
+            events.append({"effect_id": st["id"], "dtype": dtype or "damage", "amount": amt})
 
         # decrement duration
         rem = int(st.get("remaining", 1)) - 1
@@ -184,3 +182,37 @@ def tick_start_of_turn(
         # else: expired → drop
     actor.statuses = new_list
     return events
+
+
+def modify_incoming_damage(
+    target: Combatant,
+    amount: float,
+    dtype: str | None = None,
+) -> tuple[float, list[dict]]:
+    """
+    Apply pre-damage modifiers on target (e.g., Guarding).
+    Returns (new_amount, events). Consumes Guarding charges if used.
+    Note: does NOT affect DoT ticks; only direct hits should call this.
+    """
+    events: list[dict] = []
+    amt = float(amount)
+    if amt <= 0 or not target.statuses:
+        return amt, events
+    # find guarding
+    idx = next((i for i, s in enumerate(target.statuses) if s.get("id") == "guarding"), None)
+    if idx is not None:
+        st = target.statuses[idx]
+        reduce_next = float(st.get("reduce_next", 0.5))
+        charges = int(st.get("charges", 1))
+        reduced = round(amt * reduce_next, 1)
+        amt = round(max(0.0, amt - reduced), 1)
+        events.append({"type": "guard_block", "target_id": target.id, "reduced": reduced})
+        # consume a charge
+        charges -= 1
+        st["charges"] = charges
+        if charges <= 0:
+            # remove status
+            target.statuses.pop(idx)
+        else:
+            target.statuses[idx] = st
+    return amt, events

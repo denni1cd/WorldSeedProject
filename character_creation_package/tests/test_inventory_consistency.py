@@ -41,10 +41,7 @@ def resources(data_dir):
 
 @pytest.fixture(scope="module")
 def items_catalog(data_dir):
-    return {
-        item["id"]: item
-        for item in load_item_catalog(os.path.join(data_dir, "items.yaml"))
-    }
+    return {item["id"]: item for item in load_item_catalog(os.path.join(data_dir, "items.yaml"))}
 
 
 @pytest.fixture

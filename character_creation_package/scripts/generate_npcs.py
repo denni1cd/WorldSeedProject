@@ -25,12 +25,10 @@ def main():
     try:
         stat_tmpl = yaml_utils.load_yaml(data_path / "stats" / "stats.yaml")
         slot_tmpl = yaml_utils.load_yaml(data_path / "slots.yaml")
-        appearance_fields = yaml_utils.load_yaml(
-            data_path / "appearance" / "fields.yaml"
+        appearance_fields = yaml_utils.load_yaml(data_path / "appearance" / "fields.yaml")
+        class_catalog = classes_loader.load_class_catalog(data_path / "classes.yaml").get(
+            "classes", []
         )
-        class_catalog = classes_loader.load_class_catalog(
-            data_path / "classes.yaml"
-        ).get("classes", [])
         trait_catalog = traits_loader.load_trait_catalog(data_path / "traits.yaml").get(
             "traits", {}
         )
@@ -95,12 +93,8 @@ def main():
         mana_base, mana_cur = _base_current(npc.stats.get("Mana"))
         print(f"  HP: {hp_cur}/{hp_base}")
         print(f"  Mana: {mana_cur}/{mana_base}")
-        print(
-            f"  Classes: {[ (c.get('name') or c.get('id') or 'Unknown') for c in npc.classes ]}"
-        )
-        print(
-            f"  Traits: {[ (t.get('name') or t.get('id') or 'Unknown') for t in npc.traits ]}"
-        )
+        print(f"  Classes: {[ (c.get('name') or c.get('id') or 'Unknown') for c in npc.classes ]}")
+        print(f"  Traits: {[ (t.get('name') or t.get('id') or 'Unknown') for t in npc.traits ]}")
         # Printing the full stats dictionary can be verbose, let's show a summary
         stats_summary = {
             name: f"{_current_value(s):.1f}"

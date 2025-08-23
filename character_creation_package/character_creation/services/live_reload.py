@@ -60,12 +60,8 @@ class CatalogReloader:
         dr = self.data_root
         stats = stats_loader.load_stat_template(dr / "stats" / "stats.yaml")
         slots = slots_loader.load_slot_template(dr / "slots.yaml")
-        fields = appearance_loader.load_appearance_fields(
-            dr / "appearance" / "fields.yaml"
-        )
-        defaults = appearance_loader.load_appearance_defaults(
-            dr / "appearance" / "defaults.yaml"
-        )
+        fields = appearance_loader.load_appearance_fields(dr / "appearance" / "fields.yaml")
+        defaults = appearance_loader.load_appearance_defaults(dr / "appearance" / "defaults.yaml")
         resources = resources_loader.load_resources(dr / "resources.yaml")
         classes = classes_loader.load_class_catalog(dr / "classes.yaml")
         traits = traits_loader.load_trait_catalog(dr / "traits.yaml")
@@ -91,9 +87,7 @@ class CatalogReloader:
                 }
         else:
             packs_cfg = {"enabled": [], "merge": {"on_conflict": "skip"}}
-        merged_from_packs = content_packs_loader.load_and_merge_enabled_packs(
-            dr, packs_cfg
-        )
+        merged_from_packs = content_packs_loader.load_and_merge_enabled_packs(dr, packs_cfg)
 
         # Merge helper
         def list_merge(base_list, add_list, key="id"):
@@ -140,22 +134,16 @@ class CatalogReloader:
         # Apply merged overlays
         if "classes" in merged_from_packs:
             classes = {
-                "classes": list_merge(
-                    classes.get("classes", []), merged_from_packs["classes"]
-                )
+                "classes": list_merge(classes.get("classes", []), merged_from_packs["classes"])
             }
         if "traits" in merged_from_packs:
             merged_traits = dict(traits.get("traits", {}))
             merged_traits.update(merged_from_packs["traits"])
             traits = {"traits": merged_traits}
         if "races" in merged_from_packs:
-            races = {
-                "races": list_merge(races.get("races", []), merged_from_packs["races"])
-            }
+            races = {"races": list_merge(races.get("races", []), merged_from_packs["races"])}
         if "items" in merged_from_packs:
-            items = {
-                "items": list_merge(items.get("items", []), merged_from_packs["items"])
-            }
+            items = {"items": list_merge(items.get("items", []), merged_from_packs["items"])}
 
         # Appearance tables union (base + packs)
         appearance_tables: Dict[str, Any] = {}

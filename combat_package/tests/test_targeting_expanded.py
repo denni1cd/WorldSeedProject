@@ -17,13 +17,34 @@ def test_all_enemies_and_random_enemy_targeting():
         team="t1",
     )
     e1 = Combatant(
-        "E1", "E1", {"DEX": 5}, hp=10.0, mana=0.0, resist={}, tags=["humanoid"], team="t2"
+        "E1",
+        "E1",
+        {"DEX": 5},
+        hp=10.0,
+        mana=0.0,
+        resist={},
+        tags=["humanoid"],
+        team="t2",
     )
     e2 = Combatant(
-        "E2", "E2", {"DEX": 5}, hp=10.0, mana=0.0, resist={}, tags=["humanoid"], team="t2"
+        "E2",
+        "E2",
+        {"DEX": 5},
+        hp=10.0,
+        mana=0.0,
+        resist={},
+        tags=["humanoid"],
+        team="t2",
     )
     e3 = Combatant(
-        "E3", "E3", {"DEX": 5}, hp=10.0, mana=0.0, resist={}, tags=["humanoid"], team="t2"
+        "E3",
+        "E3",
+        {"DEX": 5},
+        hp=10.0,
+        mana=0.0,
+        resist={},
+        tags=["humanoid"],
+        team="t2",
     )
     parts = [a, e1, e2, e3]
     # define synthetic AoE ability inline
