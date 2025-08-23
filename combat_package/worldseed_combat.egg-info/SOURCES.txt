@@ -2,6 +2,7 @@ README.md
 pyproject.toml
 combat/__init__.py
 combat/engine/__init__.py
+combat/engine/abilities.py
 combat/engine/actions.py
 combat/engine/combatant.py
 combat/engine/effects.py
@@ -15,6 +16,7 @@ combat/loaders/body_parts_loader.py
 combat/loaders/damage_types_loader.py
 combat/loaders/narration_loader.py
 combat/loaders/status_effects_loader.py
+tests/test_abilities_core.py
 tests/test_damage_math.py
 tests/test_effects_burning.py
 tests/test_effects_stack.py
