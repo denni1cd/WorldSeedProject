@@ -1,0 +1,35 @@
+hazards:
+  - id: lava_zone
+    name: "Lava Flow"
+    phase: start_of_turn             # start_of_round | start_of_turn | end_of_turn
+    targeting:
+      locations: ["lava"]            # affect only units whose combatant.location in this set
+      require_tag_absent: ["flying"] # skip targets with any of these tags
+      team: any                      # any | alpha | beta (string match to combatant.team)
+    duration_rounds: 0               # 0 = persistent
+    effects:
+      damage:
+        amount: "4 + INT*0.0"
+        damage_type: fire
+      apply_status:
+        - { id: burning, chance: 0.25 }
+    narration:
+      tick:
+        - { text: "Lava spits at {target}, searing for {amount}.", weight: 2 }
+        - { text: "{target} skirts molten stone ({amount}).", weight: 1 }
+
+  - id: healing_fountain
+    name: "Fountain of Renewal"
+    phase: end_of_turn
+    targeting:
+      locations: ["fountain"]
+      team: any
+    duration_rounds: 0
+    effects:
+      heal:
+        amount: 3
+      resource:
+        mana: 1
+    narration:
+      tick:
+        - { text: "Cool waters mend {target} for {amount}.", weight: 2 }
