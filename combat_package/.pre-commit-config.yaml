@@ -1,11 +1,11 @@
 repos:
   - repo: https://github.com/psf/black
-    rev: 24.4.2
+    rev: 25.1.0
     hooks: 
       - id: black
         exclude: ^(.venv/|.*egg-info/|__pycache__/|\.git/|\.pytest_cache/)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.5
+    rev: v0.12.10
     hooks:
       - id: ruff
         args: ["--fix"]
