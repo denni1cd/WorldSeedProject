@@ -1,0 +1,11 @@
+effects:
+  bleeding:
+    name: "Bleeding"
+    damage_type: slashing
+    max_stacks: 3
+    stack_mode: add
+    duration: 3
+    per_tick: "1 + STA*0.03"
+    narration:
+      apply: [{ text: "{target} begins to bleed.", weight: 1 }]
+      tick:  [{ text: "{target} loses {amount} blood.", weight: 1 }]
