@@ -15,6 +15,7 @@ class Combatant:
     statuses: List[dict] = field(default_factory=list)  # runtime status instances
     cooldowns: Dict[str, int] = field(default_factory=dict)  # ability_id -> remaining turns
     team: str = "neutral"  # NEW: team label for targeting logic
+    inventory: Dict[str, int] = field(default_factory=dict)  # NEW: item_id -> count
 
     def is_alive(self) -> bool:
         return self.hp > 0

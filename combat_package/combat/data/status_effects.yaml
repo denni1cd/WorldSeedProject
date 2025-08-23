@@ -26,3 +26,23 @@ effects:
         - { text: "{target}'s veins darken—poison takes hold.", weight: 2 }
       tick:
         - { text: "{target} suffers {amount} poison damage.", weight: 2 }
+
+  guarding:
+    name: "Guarding"
+    # No damage type; it modifies next direct hit
+    duration: 2           # expires if not consumed after 2 turns
+    max_stacks: 1
+    stack_mode: refresh
+    reduce_next: 0.5      # 50% reduction on next direct hit
+    charges: 1
+    narration:
+      apply: [{ text: "{target} raises their guard.", weight: 2 }]
+
+  taunted:
+    name: "Taunted"
+    duration: 2
+    max_stacks: 1
+    stack_mode: refresh
+    taunt_to_source: true
+    narration:
+      apply: [{ text: "{target} is goaded into anger!", weight: 1 }]
