@@ -5,6 +5,8 @@ from typing import Dict, List
 
 @dataclass
 class Combatant:
+    "test"
+
     id: str
     name: str
     stats: Dict[str, float]  # e.g., {"STR":8, "DEX":7, "INT":5, "ARM":2, "WPN":3}
