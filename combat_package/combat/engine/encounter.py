@@ -3,6 +3,9 @@ from typing import List, Dict, Any, Optional
 from .combatant import Combatant
 from .rng import RandomSource
 from .threat import blank_table, add_threat, normalize
+from .environment import Environment
+from ..loaders.hazards_loader import load_hazards
+from pathlib import Path
 
 
 def _dex_of(c: Combatant) -> float:
@@ -31,6 +34,10 @@ class Encounter:
         self._round = 1
         self.log: List[str] = []
         self.events: List[Dict[str, Any]] = []  # typed event log
+        # NEW: environment
+        data_root = Path(__file__).parents[1] / "data"
+        self._hazards_cfg = load_hazards(data_root / "hazards.yaml")
+        self.env = Environment(self._hazards_cfg)
 
     @property
     def order_ids(self) -> List[str]:
@@ -280,3 +287,12 @@ class Encounter:
                 if victim and attacker:
                     add_threat(self.threat, victim, attacker, amt)
         normalize(self.threat)
+
+    # NEW: process hazards at a given phase for given actor (actor can be None for round events)
+    def process_hazards(self, phase: str) -> List[Dict[str, Any]]:
+        evs = self.env.process_phase(phase, self.participants, self.rng)
+        self.events.extend(evs)
+        return evs
+
+    # We call hazards at start_of_turn before DoT ticks; and at end_of_turn after actions.
+    # If you want start_of_round hazards, you can call process_hazards("start_of_round") externally.

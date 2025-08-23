@@ -18,6 +18,7 @@ class Combatant:
     cooldowns: Dict[str, int] = field(default_factory=dict)  # ability_id -> remaining turns
     team: str = "neutral"  # NEW: team label for targeting logic
     inventory: Dict[str, int] = field(default_factory=dict)  # NEW: item_id -> count
+    location: str = "arena"  # NEW: simple location label (for hazards/terrain)
 
     def is_alive(self) -> bool:
         return self.hp > 0

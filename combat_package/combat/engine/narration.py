@@ -128,3 +128,33 @@ def render_dot_tick(
     )
     amt_str = int(amount) if abs(amount - round(amount)) < 1e-6 else f"{amount:.1f}"
     return txt.format(target=target_name, amount=amt_str, adj_fire=adj_fire)
+
+
+def render_hazard_event(ev: Dict[str, Any], hazards_cfg: Dict[str, Any], rng: RandomSource) -> str:
+    hz = next(
+        (h for h in (hazards_cfg.get("hazards") or []) if h.get("id") == ev.get("hazard_id")), {}
+    )
+    lines = (hz.get("narration") or {}).get("tick", [])
+    target = ev.get("target_id", "target")
+    amount = ev.get("amount", 0)
+    if lines:
+        # simple uniform choice (weights baked into duplicates handled upstream if needed)
+        pool = []
+        for ln in lines:
+            pool.extend([ln.get("text", "")] * int(max(1, ln.get("weight", 1))))
+        if pool:
+            txt = rng.choice(pool)
+            return txt.format(
+                target=target,
+                amount=int(amount) if abs(amount - round(amount)) < 1e-6 else f"{amount:.1f}",
+            )
+    # fallback:
+    if ev.get("kind") == "damage":
+        return f"{ev.get('hazard_id')} harms {target} for {amount}."
+    if ev.get("kind") == "heal":
+        return f"{ev.get('hazard_id')} heals {target} for {amount}."
+    if ev.get("kind") == "resource":
+        return f"{target} regains {amount} mana from {ev.get('hazard_id')}."
+    if ev.get("kind") == "effect":
+        return f"{target} is affected by {ev.get('effect_id')}."
+    return f"{ev.get('hazard_id')} affects {target}."
