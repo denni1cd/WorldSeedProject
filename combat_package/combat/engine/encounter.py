@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import List, Dict, Any, Optional
 from .combatant import Combatant
 from .rng import RandomSource
+from .threat import blank_table, add_threat, normalize
 
 
 def _dex_of(c: Combatant) -> float:
@@ -17,6 +18,7 @@ class Encounter:
             raise ValueError("Encounter requires at least one participant.")
         self.participants = list(participants)
         self.rng = RandomSource(seed)
+        self.threat = blank_table([c.id for c in self.participants])
         self._order = sorted(
             range(len(self.participants)),
             key=lambda i: (
@@ -262,3 +264,19 @@ class Encounter:
             "ended": len(alive) <= 1,
             "winner": alive[0].id if len(alive) == 1 else None,
         }
+
+    def ingest_events_update_threat(self, events: List[Dict[str, Any]]) -> None:
+        """
+        For each 'hit' event, increase threat on the VICTIM toward the ATTACKER by damage amount (+bonus if crit).
+        For 'effect' of type 'taunted' we don't adjust threat (taunt already collapses targeting).
+        """
+        for ev in events or []:
+            if ev.get("type") == "hit":
+                victim = ev.get("target_id")
+                attacker = ev.get("actor_id")
+                amt = float(ev.get("amount", 0.0))
+                if ev.get("crit"):
+                    amt *= 1.25
+                if victim and attacker:
+                    add_threat(self.threat, victim, attacker, amt)
+        normalize(self.threat)
