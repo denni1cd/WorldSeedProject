@@ -1,4 +1,4 @@
-# WorldSeed Combat (Standalone)
+# WorldSeed Combat (Standalone) 
 Deterministic, data-driven combat engine. No XP logic (story grants XP).
 - Pure Python core (no UI); CLI demo script exists.
 - Same stat block for PCs/NPCs/enemies.
