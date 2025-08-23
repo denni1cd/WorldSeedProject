@@ -3,6 +3,7 @@ repos:
     rev: 25.1.0
     hooks: 
       - id: black
+        args: ["--line-length=100", "--target-version=py312"]
         exclude: ^(.venv/|.*egg-info/|__pycache__/|\.git/|\.pytest_cache/)
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.12.10

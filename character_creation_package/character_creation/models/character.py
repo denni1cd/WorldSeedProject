@@ -38,9 +38,7 @@ class Character:
     # Optional difficulty label (traceability)
     difficulty: str | None = None
 
-    def gain_xp(
-        self, stat_key: str, amount: float, stat_template: Dict[str, dict]
-    ) -> None:
+    def gain_xp(self, stat_key: str, amount: float, stat_template: Dict[str, dict]) -> None:
         xp_to_next = stat_template[stat_key].get("xp_to_next", 100)
         self.stat_xp[stat_key] = self.stat_xp.get(stat_key, 0.0) + amount
         while self.stat_xp[stat_key] >= xp_to_next:
@@ -60,9 +58,7 @@ class Character:
             self.classes.append(class_id)
             for stat, val in class_def.get("grants_stats", {}).items():
                 self.increase_stat(stat, val)
-            abilities = class_def.get(
-                "grants_abilities", class_def.get("abilities", [])
-            )
+            abilities = class_def.get("grants_abilities", class_def.get("abilities", []))
             self.abilities.update(abilities)
 
     def remove_class(self, class_id: str) -> None:
@@ -98,9 +94,7 @@ class Character:
                         self.increase_stat(stat, float(val))
                     except Exception:
                         continue
-                abilities = trait_def.get(
-                    "grants_abilities", trait_def.get("abilities", [])
-                )
+                abilities = trait_def.get("grants_abilities", trait_def.get("abilities", []))
                 for ability in abilities or []:
                     self.abilities.add(ability)
 
@@ -167,9 +161,7 @@ class Character:
             mods = item.get("mods", {})
             # Stats
             for stat, val in mods.get("stats", {}).items():
-                self.equipped_stat_mods[stat] = self.equipped_stat_mods.get(
-                    stat, 0.0
-                ) + float(val)
+                self.equipped_stat_mods[stat] = self.equipped_stat_mods.get(stat, 0.0) + float(val)
             # HP
             if "hp" in mods:
                 self.equipped_hp_bonus += float(mods["hp"])
@@ -238,9 +230,7 @@ class Character:
                 setattr(self, res, current_val)
                 setattr(self, last_time_attr, current_time)
 
-    def apply_status_effect(
-        self, effect_name: str, effect_data: dict, start_time: float
-    ) -> None:
+    def apply_status_effect(self, effect_name: str, effect_data: dict, start_time: float) -> None:
         """Adds a status effect to active_effects with start time tracking."""
         self.active_effects.append(
             {
@@ -251,9 +241,7 @@ class Character:
             }
         )
 
-    def update_status_effects(
-        self, current_time: float, balance: dict | None = None
-    ) -> None:
+    def update_status_effects(self, current_time: float, balance: dict | None = None) -> None:
         """Updates active effects, applies periodic damage or buffs, and removes expired ones."""
         remaining_effects = []
         for eff in self.active_effects:
@@ -356,19 +344,13 @@ class Character:
         hp_current: float | None = None
         if hasattr(hp_obj, "base") and hasattr(hp_obj, "current"):
             old_base = float(getattr(hp_obj, "base", new_hp_base)) or 1.0
-            percent = (
-                float(getattr(hp_obj, "current", old_base)) / old_base
-                if old_base
-                else 1.0
-            )
+            percent = float(getattr(hp_obj, "current", old_base)) / old_base if old_base else 1.0
             setattr(hp_obj, "base", new_hp_base)
             hp_current = percent * new_hp_base if keep_percent else new_hp_base
             setattr(hp_obj, "current", hp_current)
         elif isinstance(hp_obj, dict) and ("base" in hp_obj or "current" in hp_obj):
             old_base = float(hp_obj.get("base", new_hp_base)) or 1.0
-            percent = (
-                float(hp_obj.get("current", old_base)) / old_base if old_base else 1.0
-            )
+            percent = float(hp_obj.get("current", old_base)) / old_base if old_base else 1.0
             hp_obj["base"] = new_hp_base
             hp_current = percent * new_hp_base if keep_percent else new_hp_base
             hp_obj["current"] = hp_current
@@ -388,21 +370,13 @@ class Character:
         mana_current: float | None = None
         if hasattr(mana_obj, "base") and hasattr(mana_obj, "current"):
             old_base = float(getattr(mana_obj, "base", new_mana_base)) or 1.0
-            percent = (
-                float(getattr(mana_obj, "current", old_base)) / old_base
-                if old_base
-                else 1.0
-            )
+            percent = float(getattr(mana_obj, "current", old_base)) / old_base if old_base else 1.0
             setattr(mana_obj, "base", new_mana_base)
             mana_current = percent * new_mana_base if keep_percent else new_mana_base
             setattr(mana_obj, "current", mana_current)
-        elif isinstance(mana_obj, dict) and (
-            "base" in mana_obj or "current" in mana_obj
-        ):
+        elif isinstance(mana_obj, dict) and ("base" in mana_obj or "current" in mana_obj):
             old_base = float(mana_obj.get("base", new_mana_base)) or 1.0
-            percent = (
-                float(mana_obj.get("current", old_base)) / old_base if old_base else 1.0
-            )
+            percent = float(mana_obj.get("current", old_base)) / old_base if old_base else 1.0
             mana_obj["base"] = new_mana_base
             mana_current = percent * new_mana_base if keep_percent else new_mana_base
             mana_obj["current"] = mana_current
@@ -424,9 +398,7 @@ class Character:
         """
         Compute xp needed for the NEXT level using formulas['baseline']['xp_to_next'], with context {'level': self.level}.
         """
-        base_cost = float(
-            evaluate(formulas["baseline"]["xp_to_next"], {"level": self.level})
-        )
+        base_cost = float(evaluate(formulas["baseline"]["xp_to_next"], {"level": self.level}))
         if balance:
             try:
                 base_cost *= float(balance.get("xp_cost_scale", 1.0))
@@ -530,9 +502,7 @@ class Character:
         # Support nested slot templates (e.g., {"slots": {...}})
         def add_slots(template):
             for key, value in template.items():
-                if isinstance(value, dict) and any(
-                    isinstance(v, dict) for v in value.values()
-                ):
+                if isinstance(value, dict) and any(isinstance(v, dict) for v in value.values()):
                     add_slots(value)
                 else:
                     self.equipment[key] = None

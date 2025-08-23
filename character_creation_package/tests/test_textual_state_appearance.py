@@ -11,28 +11,19 @@ from character_creation.loaders import (
 from character_creation.ui.textual import state
 
 
-DATA_ROOT = (
-    Path(__file__).parents[2]
-    / "character_creation_package"
-    / "character_creation"
-    / "data"
-)
+DATA_ROOT = Path(__file__).parents[2] / "character_creation_package" / "character_creation" / "data"
 
 
 @pytest.fixture
 def hero():
     stat_tmpl = stats_loader.load_stat_template(DATA_ROOT / "stats" / "stats.yaml")
     slot_tmpl = slots_loader.load_slot_template(DATA_ROOT / "slots.yaml")
-    fields = appearance_loader.load_appearance_fields(
-        DATA_ROOT / "appearance" / "fields.yaml"
-    )
+    fields = appearance_loader.load_appearance_fields(DATA_ROOT / "appearance" / "fields.yaml")
     defaults = appearance_loader.load_appearance_defaults(
         DATA_ROOT / "appearance" / "defaults.yaml"
     )
     resources = resources_loader.load_resources(DATA_ROOT / "resources.yaml")
-    return state.create_new_character(
-        "PeekHero", stat_tmpl, slot_tmpl, fields, defaults, resources
-    )
+    return state.create_new_character("PeekHero", stat_tmpl, slot_tmpl, fields, defaults, resources)
 
 
 def test_apply_appearance_and_summarize(hero):

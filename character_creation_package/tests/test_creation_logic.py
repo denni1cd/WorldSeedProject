@@ -9,12 +9,7 @@ from pathlib import Path
 import builtins
 
 # Paths relative to test file location
-DATA_ROOT = (
-    Path(__file__).parents[2]
-    / "character_creation_package"
-    / "character_creation"
-    / "data"
-)
+DATA_ROOT = Path(__file__).parents[2] / "character_creation_package" / "character_creation" / "data"
 
 
 @pytest.fixture

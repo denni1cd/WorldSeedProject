@@ -42,9 +42,7 @@ def test_races_and_appearance_validate():
     races = races_loader.load_race_catalog(root / "races.yaml")
     validate_races(races)
 
-    fields = appearance_loader.load_appearance_fields(
-        root / "appearance" / "fields.yaml"
-    )
+    fields = appearance_loader.load_appearance_fields(root / "appearance" / "fields.yaml")
     validate_appearance_fields(fields)
 
     tables_dir = root / "appearance" / "tables"

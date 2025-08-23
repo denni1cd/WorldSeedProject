@@ -22,20 +22,12 @@ def main():
     root = Path(__file__).parents[1] / "character_creation" / "data"
     stat_tmpl = stats_loader.load_stat_template(root / "stats" / "stats.yaml")
     slot_tmpl = slots_loader.load_slot_template(root / "slots.yaml")
-    fields = appearance_loader.load_appearance_fields(
-        root / "appearance" / "fields.yaml"
-    )
-    defaults = appearance_loader.load_appearance_defaults(
-        root / "appearance" / "defaults.yaml"
-    )
+    fields = appearance_loader.load_appearance_fields(root / "appearance" / "fields.yaml")
+    defaults = appearance_loader.load_appearance_defaults(root / "appearance" / "defaults.yaml")
     resources = resources_loader.load_resources(root / "resources.yaml")
     progression = progression_loader.load_progression(root / "progression.yaml")
-    resource_config = resources_config_loader.load_resource_config(
-        root / "resources_config.yaml"
-    )
-    formulas = __import__("yaml").safe_load(
-        open(root / "formulas.yaml", "r", encoding="utf-8")
-    )
+    resource_config = resources_config_loader.load_resource_config(root / "resources_config.yaml")
+    formulas = __import__("yaml").safe_load(open(root / "formulas.yaml", "r", encoding="utf-8"))
 
     hero = create_new_character(
         "Regen_Test",

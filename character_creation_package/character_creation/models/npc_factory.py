@@ -125,9 +125,7 @@ def generate_npc(
     # appearance_tables_dir = .../appearance/tables  -> parent is .../appearance
     appearance_defaults_path = appearance_tables_dir.parent / "defaults.yaml"
     appearance_defaults = (
-        yaml_utils.load_yaml(appearance_defaults_path)
-        if appearance_defaults_path.exists()
-        else {}
+        yaml_utils.load_yaml(appearance_defaults_path) if appearance_defaults_path.exists() else {}
     )
 
     # 4) Create the character
@@ -189,10 +187,7 @@ def generate_npc(
                 character.appearance[field_name] = random_utils.roll_uniform(0.0, 1.0)
         else:
             # For 'any' and other types, keep defaults or set to a non-None placeholder
-            if (
-                field_name not in character.appearance
-                or character.appearance[field_name] is None
-            ):
+            if field_name not in character.appearance or character.appearance[field_name] is None:
                 character.appearance[field_name] = field_info.get("default", "")
 
     # 8) Set starting level
@@ -229,8 +224,6 @@ def generate_npc(
         character.stats["Mana"] = {"base": mana_val, "current": mana_val}
 
     # XP to next
-    character.xp_to_next_level = int(
-        formula_eval.evaluate(formulas["baseline"]["xp_to_next"], ctx)
-    )
+    character.xp_to_next_level = int(formula_eval.evaluate(formulas["baseline"]["xp_to_next"], ctx))
 
     return character

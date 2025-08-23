@@ -69,10 +69,7 @@ def _load_creation_limits() -> dict:
     try:
         # character_creation/ui/cli/wizard.py -> .../character_creation/data/creation_limits.yaml
         limits_path = (
-            Path(__file__).parents[3]
-            / "character_creation"
-            / "data"
-            / "creation_limits.yaml"
+            Path(__file__).parents[3] / "character_creation" / "data" / "creation_limits.yaml"
         )
         if limits_path.exists():
             data = load_yaml(limits_path)
@@ -154,9 +151,7 @@ def choose_appearance(
 
         while True:
             if ftype == "enum":
-                values = get_enum_values(
-                    field_id, appearance_fields, base_dir, extra_tables
-                )
+                values = get_enum_values(field_id, appearance_fields, base_dir, extra_tables)
                 if not values:
                     print(f"[warn] No table for enum field '{field_id}', using default")
                     selections[field_id] = default_val
@@ -194,9 +189,7 @@ def choose_appearance(
                 selections[field_id] = default_val
                 break
             min_v, max_v = bounds
-            print(
-                f"Set {field_id} (min {min_v}, max {max_v}) — 'd' default, 'r' random:"
-            )
+            print(f"Set {field_id} (min {min_v}, max {max_v}) — 'd' default, 'r' random:")
             raw = _safe_input("Enter number or command: ").strip().lower()
             if raw == "d":
                 selections[field_id] = coerce_numeric(default_val, min_v, max_v)
@@ -261,9 +254,7 @@ def run_wizard(loaders_dict: dict):
     difficulty_label = None
     if "balance_cfg" in loaders_dict:
         try:
-            difficulty_label = choose_difficulty(
-                loaders_dict["balance_cfg"]
-            )  # updates in place
+            difficulty_label = choose_difficulty(loaders_dict["balance_cfg"])  # updates in place
         except Exception:
             difficulty_label = None
 
@@ -275,9 +266,7 @@ def run_wizard(loaders_dict: dict):
         app_dir = _resolve_appearance_dir()
     except Exception:
         app_dir = Path(".")
-    appearance_selection = choose_appearance(
-        appearance_fields, appearance_defaults, app_dir
-    )
+    appearance_selection = choose_appearance(appearance_fields, appearance_defaults, app_dir)
     character = create_new_character(
         name, stat_tmpl, slot_tmpl, appearance_fields, appearance_defaults, resources
     )
@@ -311,7 +300,9 @@ def run_wizard(loaders_dict: dict):
         trait_names.append(meta.get("name") or tid)
     trait_csv = ", ".join(trait_names)
     # HP/Mana current/base
-    hp_line = f"{getattr(character, 'hp', 0)}/{getattr(character, 'hp_max', getattr(character, 'hp', 0))}"
+    hp_line = (
+        f"{getattr(character, 'hp', 0)}/{getattr(character, 'hp_max', getattr(character, 'hp', 0))}"
+    )
     mana_line = f"{getattr(character, 'mana', 0)}/{getattr(character, 'mana_max', getattr(character, 'mana', 0))}"
     # Core stats
     stats = getattr(character, "stats", {}) or {}

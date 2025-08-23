@@ -11,9 +11,7 @@ def load_fields():
 
 def load_defaults() -> Dict[str, Any]:
     """Backward-compatible alias to load defaults from default path."""
-    defaults_path = (
-        Path(__file__).parent.parent / "data" / "appearance" / "defaults.yaml"
-    )
+    defaults_path = Path(__file__).parent.parent / "data" / "appearance" / "defaults.yaml"
     return load_appearance_defaults(defaults_path)
 
 
