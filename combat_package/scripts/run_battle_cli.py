@@ -1,17 +1,17 @@
 from __future__ import annotations
 from pathlib import Path
-from combat.engine.combatant import Combatant
-from combat.engine.encounter import Encounter
-from combat.engine.ai import choose_and_execute
-from combat.engine.narration import (
+from ..combat.engine.combatant import Combatant
+from ..combat.engine.encounter import Encounter
+from ..combat.engine.ai import choose_and_execute
+from ..combat.engine.narration import (
     render_dot_tick,
     render_hazard_event,
 )
-from combat.loaders.abilities_loader import load_abilities
-from combat.loaders.ai_rules_loader import load_ai_rules
-from combat.loaders.narration_loader import load_narration
-from combat.loaders.status_effects_loader import load_status_effects
-from combat.loaders.hazards_loader import load_hazards
+from ..combat.loaders.abilities_loader import load_abilities
+from ..combat.loaders.ai_rules_loader import load_ai_rules
+from ..combat.loaders.narration_loader import load_narration
+from ..combat.loaders.status_effects_loader import load_status_effects
+from ..combat.loaders.hazards_loader import load_hazards
 
 
 def main():
@@ -59,7 +59,7 @@ def main():
                 print("•", render_hazard_event(ev, hazards_cfg, enc.rng))
 
             # Status DoTs
-            from combat.engine.effects import tick_start_of_turn
+            from ..combat.engine.effects import tick_start_of_turn
 
             for ev in tick_start_of_turn(actor, effs, enc.rng):
                 print(
