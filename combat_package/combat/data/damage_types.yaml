@@ -1,3 +1,4 @@
 damage_types:
   - { id: slashing, label: "Slashing", tags: [physical] }
   - { id: fire,     label: "Fire",     tags: [elemental, burn] }
+  - { id: poison,   label: "Poison",  tags: [elemental, toxic] }

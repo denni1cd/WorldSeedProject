@@ -1,0 +1,10 @@
+abilities:
+  - id: heavy_strike
+    name: "Heavy Strike"
+    kind: "attack"
+    formula: "ATT*1.3 + WPN - ARM*0.5"
+    damage_type: slashing
+    targeting: single_enemy
+    crit: { chance: "0.05 + DEX*0.001", multiplier: 1.7 }
+    resource_cost: {}
+    cooldown: 1

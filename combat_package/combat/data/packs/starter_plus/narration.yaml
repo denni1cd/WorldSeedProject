@@ -1,0 +1,5 @@
+verbs:
+  slash: [slashes, cleaves, carves, hews, rends, smashes]
+templates:
+  physical_hit:
+    - { text: "{actor} {verb_slash} at {target}'s {body_part}, dealing {amount} {dtype}.", weight: 1 }
