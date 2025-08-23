@@ -20,3 +20,10 @@ class RandomSource:
     def choice(self, seq: Sequence[T]) -> T:
         # Coerce to list so generators/sets are safe
         return self._rng.choice(list(seq))
+
+    # NEW: state get/set for snapshot/restore
+    def get_state(self):
+        return self._rng.getstate()
+
+    def set_state(self, state) -> None:
+        self._rng.setstate(state)

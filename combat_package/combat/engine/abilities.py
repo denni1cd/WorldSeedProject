@@ -29,12 +29,31 @@ def _spend_resource(c: Combatant, name: str, amount: float) -> None:
     # extend when new resources appear
 
 
-def _targets_by_spec(enc_participants: List[Combatant], actor: Combatant, spec: str) -> List[str]:
-    # For now we support only "single_enemy" and "self".
+def _is_enemy(a: Combatant, b: Combatant) -> bool:
+    return a.team != b.team
+
+
+def _targets_by_spec(
+    participants: List[Combatant], actor: Combatant, spec: str, rng: RandomSource
+) -> List[str]:
+    living = [c for c in participants if c.is_alive()]
+    enemies = [c for c in living if _is_enemy(actor, c)]
+    allies = [c for c in living if (c.team == actor.team)]
+
     if spec == "self":
         return [actor.id]
-    # enemies = anyone not actor; allies are not implemented yet
-    return [c.id for c in enc_participants if c.id != actor.id and c.is_alive()]
+    if spec == "single_enemy":
+        return [enemies[0].id] if enemies else []
+    if spec == "random_enemy":
+        return [rng.choice(enemies).id] if enemies else []
+    if spec == "all_enemies":
+        return [c.id for c in enemies]
+    if spec == "ally_lowest_hp":
+        if not allies:
+            return []
+        tgt = min(allies, key=lambda c: c.hp)
+        return [tgt.id]
+    return []
 
 
 def can_use_ability(
@@ -69,19 +88,27 @@ def execute_ability(
     Validates targets against ability.targeting.
     Deducts resources and sets cooldown only if execution proceeds.
     Returns events:
-      - hit/miss entries: {"type":"hit","target_id":...,"amount":...,"dtype":...,"crit":bool,"body_part":...}
-      - effect entries:   {"type":"effect","target_id":...,"effect_id":...}
+      - hit/miss entries: {"type":"hit","actor_id":...,"target_id":...,"ability_id":...,"amount":...,"dtype":...,"crit":bool,"body_part":...}
+      - effect entries:   {"type":"effect","actor_id":...,"target_id":...,"effect_id":...}
     """
     evs: List[Dict[str, Any]] = []
-    # validate targeting
     targeting = str(ability_def.get("targeting", "single_enemy"))
-    possible = set(_targets_by_spec(participants, actor, targeting))
-    if targeting == "single_enemy":
-        if not target_ids or target_ids[0] not in possible:
+    possible = set(_targets_by_spec(participants, actor, targeting, rng))
+
+    # normalize target_ids based on targeting
+    if targeting in ("single_enemy", "random_enemy", "ally_lowest_hp", "self"):
+        if not possible:
+            return AbilityUseResult(False, "no_valid_target", [])
+        # if caller didn't supply, auto-pick first possible for convenience
+        if not target_ids:
+            target_ids = [next(iter(possible))]
+        if target_ids[0] not in possible:
             return AbilityUseResult(False, "invalid_target", [])
         apply_to = [target_ids[0]]
-    elif targeting == "self":
-        apply_to = [actor.id]
+    elif targeting == "all_enemies":
+        apply_to = list(possible)
+        if not apply_to:
+            return AbilityUseResult(False, "no_valid_target", [])
     else:
         return AbilityUseResult(False, "unsupported_targeting", [])
 
@@ -103,8 +130,8 @@ def execute_ability(
 
     # execute (attack-like)
     for tid in apply_to:
-        tgt = next((c for c in participants if c.id == tid), None)
-        if tgt is None or not tgt.is_alive():
+        tgt = next((c for c in participants if c.id == tid and c.is_alive()), None)
+        if not tgt:
             continue
         res = resolve_attack(actor, tgt, ability_def, body_cfg, rng)
         if res.hit:
@@ -112,7 +139,9 @@ def execute_ability(
             evs.append(
                 {
                     "type": "hit",
+                    "actor_id": actor.id,
                     "target_id": tid,
+                    "ability_id": ability_def.get("id"),
                     "amount": res.amount,
                     "dtype": res.dtype,
                     "crit": res.crit,
@@ -121,9 +150,24 @@ def execute_ability(
             )
             # on-hit effects
             for inst in apply_on_hit_effects(actor, tgt, ability_def, _load_status_cfg(), rng):
-                evs.append({"type": "effect", "target_id": tid, "effect_id": inst.id})
+                evs.append(
+                    {
+                        "type": "effect",
+                        "actor_id": actor.id,
+                        "target_id": tid,
+                        "ability_id": ability_def.get("id"),
+                        "effect_id": inst.id,
+                    }
+                )
         else:
-            evs.append({"type": "miss", "target_id": tid})
+            evs.append(
+                {
+                    "type": "miss",
+                    "actor_id": actor.id,
+                    "target_id": tid,
+                    "ability_id": ability_def.get("id"),
+                }
+            )
     return AbilityUseResult(True, "", evs)
 
 

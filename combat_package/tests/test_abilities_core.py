@@ -25,6 +25,7 @@ def test_resource_cost_and_cooldown_applied():
         mana=6.0,
         resist={},
         tags=["humanoid"],
+        team="team1",
     )
     b = Combatant(
         "B",
@@ -34,6 +35,7 @@ def test_resource_cost_and_cooldown_applied():
         mana=0.0,
         resist={},
         tags=["humanoid"],
+        team="team2",
     )
     ok, reason = can_use_ability(a, fireball)
     assert ok
@@ -55,6 +57,7 @@ def test_insufficient_mana_prevents_cast():
         mana=0.0,
         resist={},
         tags=["humanoid"],
+        team="team1",
     )
     ok, reason = can_use_ability(a, fireball)
     assert not ok and "insufficient_mana" in reason
@@ -71,6 +74,7 @@ def test_invalid_target_rejected():
         mana=10.0,
         resist={},
         tags=["humanoid"],
+        team="team1",
     )
     b = Combatant(
         "B",
@@ -80,6 +84,7 @@ def test_invalid_target_rejected():
         mana=0.0,
         resist={},
         tags=["humanoid"],
+        team="team2",
     )
     res = execute_ability([a, b], a, fireball, ["Z"], RandomSource(1))
     assert not res.ok and res.reason == "invalid_target"
@@ -96,6 +101,7 @@ def test_cooldown_ticks_down():
         mana=20.0,
         resist={},
         tags=["humanoid"],
+        team="team1",
     )
     b = Combatant(
         "B",
@@ -105,6 +111,7 @@ def test_cooldown_ticks_down():
         mana=0.0,
         resist={},
         tags=["humanoid"],
+        team="team2",
     )
     # first cast ok
     res1 = execute_ability([a, b], a, fireball, [b.id], RandomSource(2))
